@@ -24,6 +24,7 @@ def getPosition(contract):
             result = position
     return result
 
+
 def getMarketPrice(contract):
     #get market price of a contract
     #for some reason paper account doesn't share sub with live so need to send request to live
@@ -41,8 +42,22 @@ def getMarketPrice(contract):
 
     return ticker.marketPrice()
 
-def main():
 
+def placeMarketOrder(contract, direction, quantity):
+    order = MarketOrder(direction, quantity)
+    trade = ib.placeOrder(contract, order)
+    ib.sleep(1)
+    print(trade.log)
+
+
+def liquidatePosition(contract):
+    position = getPosition(contract)
+    quantity = position[2]
+    placeMarketOrder(contract,'Sell', quantity )
+
+
+
+def main():
     # create cac futures contracts
 
     #//////////////////////Prints list of all available cac futures
@@ -51,8 +66,7 @@ def main():
     # print(cac)
     #//////////////////////
 
-    #define contract
-
+    #/////////  define contract ////////
     cac = Future(conId=372585961)
     #updates passed contract with full contract details
     ib.qualifyContracts(cac)
@@ -63,47 +77,24 @@ def main():
 
 
     #/////////  get price of contract ////////
-    # price = getMarketPrice(cac)
-    # print(price)
+    #price = getMarketPrice(cac)
+    #print(price)
 
-    
+    #/////////  place trade ////////
+    #'Buy' or 'Sell'
+    #direction = 'Buy'
+    #quantity = 4
+    #placeMarketOrder(cac, direction, quantity)
+
+    #/////////  liquidate position ////////
+    liquidatePosition(cac)
 
 
     ib.disconnect()
 
-    # #get market price
-    # ib.reqMktData(cac, '', False, False)
-    # ticker=ib.ticker(cac)
-    # ib.sleep(2)
-    # print(ticker.marketPrice())
 
-    # #place an order
-    # order = MarketOrder('Buy', 1)
-    # trade = ib.placeOrder(cac, order)
-
-    # ib.sleep(1)
-    # print(trade.log)
-
-    #check positions and select relevant contract
 
 
 if __name__ == "__main__":
     main()
 
-
-
-
-
-
-# # get the index tickers and subscribe to live tick data
-# vixTicker, vxnTicker = ib.reqTickers(vix, vxn)
-# ib.reqMktData(vix, '', False, False)
-# ib.reqMktData(vxn, '', False, False)
-
-# # loop that runs until the market conditions are met
-# while ib.waitOnUpdate():
-#     if vixTicker.marketPrice() - vxnTicker.marketPrice() >= 10:
-#         print('VIX has popped')
-#         break
-
-# # do other stuff here
