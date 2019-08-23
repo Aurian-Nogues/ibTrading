@@ -8,6 +8,11 @@ import re
 
 ib = IB()
 
+#define global variables
+cacOnState = ''
+
+
+
 
 def getPosition(contract):
     #returns the position for a given contract
@@ -56,42 +61,42 @@ def placeMarketOrder(contract, direction, quantity, strategy):
 
 
 def writeLog(tradeLog, contract, direction, strategy):
+    for entry in tradeLog:
+        if entry.message != '':
+                #get filled quantity
+                text = entry.message
+                try:
+                        found = re.search('Fill (.+?)@', text).group(1)
+                        execQtyLog = found
+                except:
+                        print('Execution quantity not found in message')
+                        execQtyLog = 'Qty not found in trade log'
 
-        for entry in tradeLog:
-                if entry.message != '':
-                        #get filled quantity
-                        text = entry.message
-                        try:
-                                found = re.search('Fill (.+?)@', text).group(1)
-                                execQtyLog = found
+                #define log entries    
+                strategy = strategy
+                timeLog = entry.time
+                contractLog = contract.symbol
+                conIdLog = contract.conId
+                expiryLog = contract.lastTradeDateOrContractMonth
+                directionLog = direction
+                execPriceLog = entry.message.split('@', 1)[1]
+                execQtyLog = execQtyLog
 
-                        except:
-                                print('Execution quantity not found in message')
-                                execQtyLog = 'Qty not found in trade log'
-                        #define log entries    
-                        strategy = strategy
-                        timeLog = entry.time
-                        contractLog = contract.symbol
-                        conIdLog = contract.conId
-                        expiryLog = contract.lastTradeDateOrContractMonth
-                        directionLog = direction
-                        execPriceLog = entry.message.split('@', 1)[1]
-                        execQtyLog = execQtyLog
+                #build entry and append it to trade log
+                logEntry = [
+                        strategy,
+                        timeLog,
+                        contractLog,
+                        conIdLog,
+                        expiryLog,
+                        directionLog,
+                        execPriceLog,
+                        execQtyLog
+                ]
+                with open('CAC_ON_trading_log.csv', 'a') as f:
+                        writer = csv.writer(f, lineterminator = '\n')
+                        writer.writerow(logEntry)
 
-                        #build entry and append it to trade log
-                        logEntry = [
-                                strategy,
-                                timeLog,
-                                contractLog,
-                                conIdLog,
-                                expiryLog,
-                                directionLog,
-                                execPriceLog,
-                                execQtyLog
-                        ]
-                        with open('CAC_ON_trading_log.csv', 'a') as f:
-                                writer = csv.writer(f, lineterminator = '\n')
-                                writer.writerow(logEntry)
 
 def liquidatePosition(contract, strategy):
     position = getPosition(contract)
@@ -139,25 +144,38 @@ def morningClose(contract):
         print('Algo is still running, will open position this evening')
         ib.disconnect()
 
+def masterCacOn(contract):
+    #This functions determines wether to open or close a trade in CAC_ON
+
+    global cacOnState
+
+    if cacOnState == 'Closed':
+            eveningOpen(contract)
+            cacOnState = 'Open'
+    elif cacOnState == 'Open':
+            morningClose(contract)
+            cacOnState = 'Closed'
+
 def main():
 
-    #define working contract
+    #Start CAC_on strategy
     ib.connect('127.0.0.1', 7497, clientId=1)
     cac = createCacContract()
+    position = getPosition(cac)
     ib.disconnect()
+   
+    global cacOnState
+    if position is None:
+        cacOnState = 'Closed'
+    else:
+        cacOnState = 'Open'
 
-    morningClose(cac)
-
-    #////// tasks schedule //////
-    #schedule.every().thursday.at("15:28").do(eveningOpen, contract = cac)
-    #schedule.every().thursday.at("15:29").do(morningClose, contract = cac)
-    #schedule.every().thursday.at("15:31").do(eveningOpen, contract = cac)
-    #schedule.every().thursday.at("15:31").do(morningClose, contract = cac)
+    schedule.every(5).seconds.do(masterCacOn, cac)    
 
     #loop to keep the scheduler running
-    #while True:
-    #    schedule.run_pending()
-    #    time.sleep(1)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 
