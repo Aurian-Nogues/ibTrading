@@ -37,13 +37,13 @@ def getMarketPrice(contract):
     
     #disconnect from paper account and connect to live
     #ib.disconnect()
-    ib.connect('127.0.0.1', 7497, clientId=1)
+    if ib.isConnected() != True:
+        ib.connect('127.0.0.1', 7497, clientId=45)
 
     ib.reqMktData(contract, '', False, False)
     ticker=ib.ticker(contract)
     ib.sleep(2)
 
-    ib.disconnect()
 
     return ticker.marketPrice()
 
@@ -111,7 +111,9 @@ def createCacContract():
     return contract
 
 def eveningOpen(contract):
-    ib.connect('127.0.0.1', 7497, clientId=1)
+    if ib.isConnected() != True:
+        ib.connect('127.0.0.1', 7497, clientId=45)
+
     print('\n')
     position = getPosition(contract)
     strategy = 'CAC_ON'
@@ -120,7 +122,7 @@ def eveningOpen(contract):
         direction = 'Buy'
         quantity = 1
         placeMarketOrder(contract, direction, quantity, strategy)
-        ib.disconnect()
+
 
     else:
         print('Error, there already is a position open in CAC_ON')
@@ -131,18 +133,20 @@ def eveningOpen(contract):
 
 
 def morningClose(contract):
-    ib.connect('127.0.0.1', 7497, clientId=1)
+    if ib.isConnected() != True:
+        ib.connect('127.0.0.1', 7497, clientId=45)
+
     print('\n')
     print('Closing position on CAC_ON...')
     strategy = 'CAC_ON'
     position = getPosition(contract)
     if position is not None:
         liquidatePosition(contract, strategy)
-        ib.disconnect()
+
     else:
         print('Error, there is no position to close on CAC_ON')
         print('Algo is still running, will open position this evening')
-        ib.disconnect()
+
 
 def masterCacOn(contract):
     #This functions determines wether to open or close a trade in CAC_ON
@@ -159,10 +163,12 @@ def masterCacOn(contract):
 def main():
 
     #Start CAC_on strategy
-    ib.connect('127.0.0.1', 7497, clientId=1)
+
+    if ib.isConnected() != True:
+            ib.connect('127.0.0.1', 7497, clientId=45)
+
     cac = createCacContract()
     position = getPosition(cac)
-    ib.disconnect()
    
     global cacOnState
     if position is None:
