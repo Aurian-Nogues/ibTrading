@@ -6,11 +6,28 @@ import csv
 import pandas as pd
 import re
 
+
 ib = IB()
 
 #define global variables
 cacOnState = ''
 
+
+#//////// contracts /////////
+
+def createCacContract():
+    #create contract for cac future expiring 20 sept 2019
+    contract = Future(conId=372585961)
+    ib.qualifyContracts(contract)
+    return contract
+
+
+#//////////////////////////////
+
+
+def checkConnection():
+   if ib.isConnected() != True:
+        ib.connect('127.0.0.1', 7497, clientId=45)
 
 
 
@@ -34,11 +51,8 @@ def getPosition(contract):
 
 def getMarketPrice(contract):
     #get market price of a contract
-    
-    #disconnect from paper account and connect to live
-    #ib.disconnect()
-    if ib.isConnected() != True:
-        ib.connect('127.0.0.1', 7497, clientId=45)
+ 
+    checkConnection()
 
     ib.reqMktData(contract, '', False, False)
     ticker=ib.ticker(contract)
@@ -104,15 +118,9 @@ def liquidatePosition(contract, strategy):
     placeMarketOrder(contract,'Sell', quantity, strategy )
     print('Liquidation order placed')
 
-def createCacContract():
-    #create contract for cac future expiring 20 sept 2019
-    contract = Future(conId=372585961)
-    ib.qualifyContracts(contract)
-    return contract
 
 def eveningOpen(contract):
-    if ib.isConnected() != True:
-        ib.connect('127.0.0.1', 7497, clientId=45)
+    checkConnection()
 
     print('\n')
     position = getPosition(contract)
@@ -133,8 +141,7 @@ def eveningOpen(contract):
 
 
 def morningClose(contract):
-    if ib.isConnected() != True:
-        ib.connect('127.0.0.1', 7497, clientId=45)
+    checkConnection()
 
     print('\n')
     print('Closing position on CAC_ON...')
@@ -160,23 +167,39 @@ def masterCacOn(contract):
             morningClose(contract)
             cacOnState = 'Closed'
 
+
+
+#//////////// app ///////////////////////
+
+
 def main():
 
     #Start CAC_on strategy
 
-    if ib.isConnected() != True:
-            ib.connect('127.0.0.1', 7497, clientId=45)
+    checkConnection()
 
     cac = createCacContract()
-    position = getPosition(cac)
+    positionCac = getPosition(cac)
    
     global cacOnState
-    if position is None:
+    if positionCac is None:
         cacOnState = 'Closed'
     else:
         cacOnState = 'Open'
 
-    schedule.every(5).seconds.do(masterCacOn, cac)    
+    #schedule.every(5).seconds.do(masterCacOn, cac)
+
+    schedule.every().monday.at("09:00").do(masterCacOn, cac)
+    schedule.every().monday.at("17:00").do(masterCacOn, cac)
+    schedule.every().tuesday.at("09:00").do(masterCacOn, cac)
+    schedule.every().tuesday.at("17:00").do(masterCacOn, cac)
+    schedule.every().wednesday.at("09:00").do(masterCacOn, cac)
+    schedule.every().wednesday.at("17:00").do(masterCacOn, cac)
+    schedule.every().thursday.at("09:00").do(masterCacOn, cac)
+    schedule.every().thursday.at("17:00").do(masterCacOn, cac)
+    schedule.every().friday.at("09:00").do(masterCacOn, cac)
+    schedule.every().friday.at("17:00").do(masterCacOn, cac)
+
 
     #loop to keep the scheduler running
     while True:
