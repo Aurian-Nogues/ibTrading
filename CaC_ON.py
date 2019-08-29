@@ -187,18 +187,19 @@ def main():
     else:
         cacOnState = 'Open'
 
-    schedule.every(5).seconds.do(masterCacOn, cac)
+    #schedule.every(5).seconds.do(masterCacOn, cac)
 
-#     schedule.every().monday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().monday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().tuesday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().tuesday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().wednesday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().wednesday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().thursday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().thursday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().friday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().friday.at("17:00").do(masterCacOn, cac)
+
+    schedule.every().monday.at("09:00").do(masterCacOn, cac)
+    schedule.every().monday.at("17:00").do(masterCacOn, cac)
+    schedule.every().tuesday.at("09:00").do(masterCacOn, cac)
+    schedule.every().tuesday.at("17:00").do(masterCacOn, cac)
+    schedule.every().wednesday.at("09:00").do(masterCacOn, cac)
+    schedule.every().wednesday.at("17:00").do(masterCacOn, cac)
+    schedule.every().thursday.at("09:00").do(masterCacOn, cac)
+    schedule.every().thursday.at("17:00").do(masterCacOn, cac)
+    schedule.every().friday.at("09:00").do(masterCacOn, cac)
+    schedule.every().friday.at("17:00").do(masterCacOn, cac)
 
 
     #loop to keep the scheduler running
