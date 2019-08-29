@@ -27,7 +27,8 @@ def createCacContract():
 
 def checkConnection():
    if ib.isConnected() != True:
-        ib.connect('127.0.0.1', 7497, clientId=45)
+        ib.connect('127.0.0.1', 7497, clientId=45) # TWS
+        #ib.connect('127.0.0.1', 4002, clientId=45) # Gateway
 
 
 

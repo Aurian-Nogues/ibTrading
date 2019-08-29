@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "trading-env\\Scripts\\python.exe"
+    "python.pythonPath": "trading-env\\Scripts\\python.exe",
+    "git.ignoreLimitWarning": true
 }
