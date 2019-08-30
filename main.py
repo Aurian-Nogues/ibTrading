@@ -221,15 +221,21 @@ def Cac_master(contract):
 
 
 
+def futArb(contracts):
+    prices = getMultipleMarketPrices(contracts)
+    print(prices)
+    ratio = prices[0] / prices[1]
+    print(ratio)
+
+
+
 #//////////// app ///////////////////////
 
 
 def main():
-
-    #-------Start CAC_on strategy--------
-
     checkConnection()
 
+#-------Start CAC_on strategy--------
     cac = Cac_CreateContract()
     positionCac = getPosition(cac)
    
@@ -239,7 +245,7 @@ def main():
     else:
         cacOn_State = 'Open'
 
-    schedule.every(5).seconds.do(Cac_master, cac)
+    #schedule.every(5).seconds.do(Cac_master, cac)
     #schedule.every().friday.at("12:40").do(Cac_master, cac)
 
 #     schedule.every().monday.at("09:00").do(Cac_master, cac)
@@ -253,6 +259,13 @@ def main():
 #     schedule.every().friday.at("09:00").do(Cac_master, cac)
 #     schedule.every().friday.at("17:00").do(Cac_master, cac)
 
+  #-------Start futArb strategy--------
+
+    nasdaq = Nasdaq_CreateContract()
+    russel = Russel_CreateContract()
+    contracts = [nasdaq, russel]
+    schedule.every(5).seconds.do(futArb, contracts)    
+    #schedule.every().monday.at("09:00").do(futArb, contracts)
 
 
 
