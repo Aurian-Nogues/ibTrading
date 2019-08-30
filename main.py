@@ -9,14 +9,37 @@ import re
 ib = IB()
 
 #define global variables
-cacOnState = ''
+cacOn_State = ''
 
 
 #//////// contracts /////////
 
-def createCacContract():
+def Cac_CreateContract():
     #create contract for cac future expiring 20 sept 2019
-    contract = Future(conId=372585961)
+    contract = Future(localSymbol="MFCU9", exchange = "MONEP")
+    #ib.reqContractDetails(contract)
+    ib.qualifyContracts(contract)
+    return contract
+
+def SE_CreateContract():
+    #create contract for S&P500 mini future expiring 20 sept 2019
+    contract = Future(localSymbol="ESU9", exchange = "GLOBEX")
+    #ib.reqContractDetails(contract)
+    ib.qualifyContracts(contract)
+    
+    return contract
+
+def Nasdaq_CreateContract():
+    #create contract for NASDAQ mini future expiring 20 dec 2019
+    contract = Future(localSymbol="NQZ9", exchange = "GLOBEX")
+    #ib.reqContractDetails(contract)
+    ib.qualifyContracts(contract)
+    return contract
+
+def Russel_CreateContract():
+    #create contract for Russel 2000 mini future expiring 20 sept 2019
+    contract = Future(localSymbol="RTYU9", exchange = "GLOBEX")
+    #ib.reqContractDetails(contract)
     ib.qualifyContracts(contract)
     return contract
 
@@ -28,7 +51,6 @@ def checkConnection():
    if ib.isConnected() != True:
         ib.connect('127.0.0.1', 7497, clientId=45) # TWS
         #ib.connect('127.0.0.1', 4002, clientId=45) # Gateway
-
 
 
 def getPosition(contract):
@@ -58,8 +80,38 @@ def getMarketPrice(contract):
     ticker=ib.ticker(contract)
     ib.sleep(2)
 
-
     return ticker.marketPrice()
+
+
+def getMultipleMarketPrices(contracts):
+    #determine if argument passed is single contract or list
+    try:
+        contractNumber = len(contracts)
+    except TypeError:
+        print("Error: called multipleMarketPrices function for single contract")
+        print(contracts)
+        sys.exit('used the wrong way to call contract, leaving application')
+
+    #change this to change type of market data
+    ib.reqMarketDataType(3) #1=live / 2= frozen / 3=delayed / 4=delayed frozen
+
+    #get market price of a contracts
+    checkConnection()
+
+    tickersList = []
+    priceList=[]
+
+    for contract in contracts:
+
+        ib.reqMktData(contract, '', False, False)
+        tickersList.append(ib.ticker(contract))
+
+    ib.sleep(2)
+
+    for ticker in tickersList:
+        priceList.append(ticker.marketPrice())
+
+    return priceList
 
 
 def placeMarketOrder(contract, direction, quantity, strategy):
@@ -119,7 +171,7 @@ def liquidatePosition(contract, strategy):
     print('Liquidation order placed')
 
 
-def eveningOpen(contract):
+def Cac_eveningOpen(contract):
     checkConnection()
 
     print('\n')
@@ -140,7 +192,7 @@ def eveningOpen(contract):
         sys.exit()
 
 
-def morningClose(contract):
+def Cac_morningClose(contract):
     checkConnection()
 
     print('\n')
@@ -155,17 +207,17 @@ def morningClose(contract):
         print('Algo is still running, will open position this evening')
 
 
-def masterCacOn(contract):
+def Cac_master(contract):
     #This functions determines wether to open or close a trade in CAC_ON
 
-    global cacOnState
+    global cacOn_State
 
-    if cacOnState == 'Closed':
-            eveningOpen(contract)
-            cacOnState = 'Open'
-    elif cacOnState == 'Open':
-            morningClose(contract)
-            cacOnState = 'Closed'
+    if cacOn_State == 'Closed':
+            Cac_eveningOpen(contract)
+            cacOn_State = 'Open'
+    elif cacOn_State == 'Open':
+            Cac_morningClose(contract)
+            cacOn_State = 'Closed'
 
 
 
@@ -174,32 +226,38 @@ def masterCacOn(contract):
 
 def main():
 
-    #Start CAC_on strategy
+    #-------Start CAC_on strategy--------
 
     checkConnection()
 
-    cac = createCacContract()
+    cac = Cac_CreateContract()
     positionCac = getPosition(cac)
    
-    global cacOnState
+    global cacOn_State
     if positionCac is None:
-        cacOnState = 'Closed'
+        cacOn_State = 'Closed'
     else:
-        cacOnState = 'Open'
+        cacOn_State = 'Open'
 
-    #schedule.every(5).seconds.do(masterCacOn, cac)
-    schedule.every().friday.at("12:40").do(masterCacOn, cac)
+    schedule.every(5).seconds.do(Cac_master, cac)
+    #schedule.every().friday.at("12:40").do(Cac_master, cac)
 
-#     schedule.every().monday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().monday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().tuesday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().tuesday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().wednesday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().wednesday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().thursday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().thursday.at("17:00").do(masterCacOn, cac)
-#     schedule.every().friday.at("09:00").do(masterCacOn, cac)
-#     schedule.every().friday.at("17:00").do(masterCacOn, cac)
+#     schedule.every().monday.at("09:00").do(Cac_master, cac)
+#     schedule.every().monday.at("17:00").do(Cac_master, cac)
+#     schedule.every().tuesday.at("09:00").do(Cac_master, cac)
+#     schedule.every().tuesday.at("17:00").do(Cac_master, cac)
+#     schedule.every().wednesday.at("09:00").do(Cac_master, cac)
+#     schedule.every().wednesday.at("17:00").do(Cac_master, cac)
+#     schedule.every().thursday.at("09:00").do(Cac_master, cac)
+#     schedule.every().thursday.at("17:00").do(Cac_master, cac)
+#     schedule.every().friday.at("09:00").do(Cac_master, cac)
+#     schedule.every().friday.at("17:00").do(Cac_master, cac)
+
+
+
+
+
+
 
 
     #loop to keep the scheduler running
