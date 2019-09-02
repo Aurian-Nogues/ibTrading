@@ -359,7 +359,8 @@ def futArbTimingClose(contracts):
 
     
 
-
+def test():
+    print("working")
 
 
 #//////////// app ///////////////////////
@@ -448,6 +449,10 @@ def main():
     schedule.every().day.at("15:58").do(futArbMonitor, contractsFutArb)
 
     schedule.every().day.at("16:00").do(futArbTimingClose, contractsFutArb)
+
+    #schedule.every().monday.at("21:17").do(test)
+    #schedule.every(2).seconds.do(test)
+
 
 
     #loop to keep the scheduler running
