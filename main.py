@@ -85,7 +85,8 @@ def getPosition(contract):
 
 def getMarketPrice(contract):
     checkConnection()
-    #get market price of a contract
+    #change this to change type of market data
+    ib.reqMarketDataType(1) #1=live / 2= frozen / 3=delayed / 4=delayed frozen
  
     
 
@@ -107,7 +108,7 @@ def getMultipleMarketPrices(contracts):
         sys.exit('used the wrong way to call contract, leaving application')
 
     #change this to change type of market data
-    ib.reqMarketDataType(3) #1=live / 2= frozen / 3=delayed / 4=delayed frozen
+    ib.reqMarketDataType(1) #1=live / 2= frozen / 3=delayed / 4=delayed frozen
 
     #get market price of a contracts
     checkConnection()
@@ -387,16 +388,16 @@ def main():
     #schedule.every(5).seconds.do(Cac_master, cac)
     #schedule.every().friday.at("12:40").do(Cac_master, cac)
 
-#     schedule.every().monday.at("08:59").do(Cac_master, cac)
-#     schedule.every().monday.at("17:35").do(Cac_master, cac)
-#     schedule.every().tuesday.at("08:59").do(Cac_master, cac)
-#     schedule.every().tuesday.at("17:35").do(Cac_master, cac)
-#     schedule.every().wednesday.at("08:59").do(Cac_master, cac)
-#     schedule.every().wednesday.at("17:35").do(Cac_master, cac)
-#     schedule.every().thursday.at("08:59").do(Cac_master, cac)
-#     schedule.every().thursday.at("17:35").do(Cac_master, cac)
-#     schedule.every().friday.at("08:59").do(Cac_master, cac)
-#     schedule.every().friday.at("17:35").do(Cac_master, cac)
+    schedule.every().monday.at("08:59").do(Cac_master, cac)
+    schedule.every().monday.at("17:35").do(Cac_master, cac)
+    schedule.every().tuesday.at("08:59").do(Cac_master, cac)
+    schedule.every().tuesday.at("17:35").do(Cac_master, cac)
+    schedule.every().wednesday.at("08:59").do(Cac_master, cac)
+    schedule.every().wednesday.at("17:35").do(Cac_master, cac)
+    schedule.every().thursday.at("08:59").do(Cac_master, cac)
+    schedule.every().thursday.at("17:35").do(Cac_master, cac)
+    schedule.every().friday.at("08:59").do(Cac_master, cac)
+    schedule.every().friday.at("17:35").do(Cac_master, cac)
 
 #-------Start futArb strategy--------
 #at 15:00 Paris time check the spread
@@ -450,7 +451,7 @@ def main():
 
     schedule.every().day.at("16:00").do(futArbTimingClose, contractsFutArb)
 
-    #schedule.every().monday.at("21:17").do(test)
+    #schedule.every().tuesday.at("12:05").do(test)
     #schedule.every(2).seconds.do(test)
 
 
