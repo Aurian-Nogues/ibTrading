@@ -186,6 +186,18 @@ def writeLog(tradeLog, contract, direction, strategy):
                             writer.writerow(logEntry)
 
 
+def logFutArbMonitoring(logList):
+    #13 entries
+    logEntry = []
+    for entry in logList:
+        logEntry.append(entry)
+
+    with open('FutArb_prices_monitoring.csv', 'a') as f:
+        writer = csv.writer(f, lineterminator = '\n')
+        writer.writerow(logEntry)
+
+
+
 def liquidatePosition(contract, strategy):
     checkConnection()
     position = getPosition(contract)
@@ -237,24 +249,43 @@ def Cac_morningClose(contract):
         print('Algo is still running, will open position this evening')
 
 
-def Cac_master(contract):
+def Cac_master():
     checkConnection()
     #This functions determines wether to open or close a trade in CAC_ON
 
-    global cacOn_State
+    cac = Cac_CreateContract()
+    positionCac = getPosition(cac)
+
+    if positionCac is None:
+        cacOn_State = 'Closed'
+        print('CacON status: ' +str(cacOn_State))
+    else:
+        cacOn_State = 'Open'
+        print('CacON status: ' +str(cacOn_State))
 
     if cacOn_State == 'Closed':
-            Cac_eveningOpen(contract)
+            Cac_eveningOpen(cac)
             cacOn_State = 'Open'
     elif cacOn_State == 'Open':
-            Cac_morningClose(contract)
+            Cac_morningClose(cac)
             cacOn_State = 'Closed'
 
 
-def futArbInitial(contracts):
+
+def definecontractsFutArb():
+    russel = Russel_CreateContract()
+    es = Es_CreateContract()
+    contractsFutArb = [russel, es]
+    return contractsFutArb
+
+
+def futArbInitial():
     checkConnection()
     global initComboPrice
     global futArb_state
+
+    contracts = definecontractsFutArb()
+
 
     today = datetime.datetime.today()
     weekday = today.weekday() #returns integer, monday=0, tuesday=1...
@@ -263,20 +294,46 @@ def futArbInitial(contracts):
         
         
         futArb_state = 'closed'
-        print("Triggered futArb")
 
         prices = getMultipleMarketPrices(contracts)
         russelPrice = prices[0]
         esPrice = prices[1]
         initComboPrice = esPrice - 2*russelPrice
-        
+
+        print("/////////Triggered futArb///////")
+        print('futArb state = ' + str(futArb_state))
+        print('Russel price = ' + str(russelPrice))
+        print('ES price = ' + str(esPrice))
+        print('combo price = ' + str(initComboPrice))
+        print('//////////////////////////////// \n')
+
+    #write to log
+    
+    logStrategy = 'futArb'
+    logTime = datetime.datetime.now()
+    logRusselPrice = russelPrice
+    logEsPrice = esPrice
+    logComboOpening = initComboPrice
+    logCurrentCombo = initComboPrice
+    logLowerBoundary = 'n/a'
+    logHigherBoundary = 'n/a'
+    logState = futArb_state 
+    logConclusion = 'Triggered futArb'
+
+    logEntry = [logStrategy, logTime, logRusselPrice, logEsPrice,logComboOpening, logCurrentCombo, logLowerBoundary, logHigherBoundary, logState, logConclusion]
+    logFutArbMonitoring(logEntry)
+
 
         
 
-def futArbMonitor(contracts):
+        
+
+def futArbMonitor():
     checkConnection()
     global futArb_state
     global initComboPrice
+
+    contracts = definecontractsFutArb()
 
     russel = contracts[0]
     es = contracts[1]
@@ -289,7 +346,7 @@ def futArbMonitor(contracts):
         print('futarb is not triggerable')
         print('either we did not go through futArbInitial or P&L is <> $500')
 
-    elif futArb_state == 'closed': #check if we should be opening a position
+    if futArb_state == 'closed': #check if we should be opening a position
 
         prices = getMultipleMarketPrices(contracts)
         russelPrice = prices[0]
@@ -298,6 +355,14 @@ def futArbMonitor(contracts):
 
         lowBoudary = initComboPrice -250
         highBoundary = initComboPrice + 250
+
+        print('////////Monitoriung futarb/////////')
+        print('futArb state = ' + str(futArb_state))
+        print('Russel price = ' + str(russelPrice))
+        print('ES price = ' + str(esPrice))
+        print('combo price = ' + str(initComboPrice))
+        print('Bounadaries are: ' + str(lowBoudary) + ' / ' + str(highBoundary))
+
 
         #tests---------------------------------------
         #currentComboPrice = initComboPrice -300
@@ -309,13 +374,21 @@ def futArbMonitor(contracts):
             placeMarketOrder(russel, "Buy", 2, 'FutArb')
             futArb_state = 'open'
 
-        if currentComboPrice >= highBoundary:
+        elif currentComboPrice >= highBoundary:
             print('futArb: opening position +1ES -2RTY')
             placeMarketOrder(es, "Buy", 1, 'FutArb')
             placeMarketOrder(russel, "Sell", 2, 'FutArb')
             futArb_state = 'open'
+        
+        else:
+            print('Combo was outside boundaries')
+            currentTimestamp = datetime.datetime.now()
+            print(str(currentTimestamp))
+            print('')
+        
 
-    elif futArb_state == 'open': #check if p$L is <> $500 so we should close
+
+    if futArb_state == 'open': #check if p$L is <> $500 so we should close
 
         prices = getMultipleMarketPrices(contracts)
         russelPrice = prices[0]
@@ -343,9 +416,11 @@ def futArbMonitor(contracts):
             futArb_state = 'non_triggerable'            
 
 
-def futArbTimingClose(contracts):
+def futArbTimingClose():
     checkConnection()
     global futArb_state
+
+    contracts = definecontractsFutArb()
     russel = contracts[0]
     es = contracts[1]
 
@@ -374,30 +449,19 @@ def main():
 #open position at 17:35 paris time, close it next day at 08:59 paris time
 
 
-    cac = Cac_CreateContract()
-    positionCac = getPosition(cac)
-   
-    global cacOn_State
-    if positionCac is None:
-        cacOn_State = 'Closed'
-    else:
-        cacOn_State = 'Open'
-
-
-
-    #schedule.every(5).seconds.do(Cac_master, cac)
+    #schedule.every(3).seconds.do(Cac_master)
     #schedule.every().friday.at("12:40").do(Cac_master, cac)
 
-    schedule.every().monday.at("08:59").do(Cac_master, cac)
-    schedule.every().monday.at("17:35").do(Cac_master, cac)
-    schedule.every().tuesday.at("08:59").do(Cac_master, cac)
-    schedule.every().tuesday.at("17:35").do(Cac_master, cac)
-    schedule.every().wednesday.at("08:59").do(Cac_master, cac)
-    schedule.every().wednesday.at("17:35").do(Cac_master, cac)
-    schedule.every().thursday.at("08:59").do(Cac_master, cac)
-    schedule.every().thursday.at("17:35").do(Cac_master, cac)
-    schedule.every().friday.at("08:59").do(Cac_master, cac)
-    schedule.every().friday.at("17:35").do(Cac_master, cac)
+    schedule.every().monday.at("08:59").do(Cac_master)
+    schedule.every().monday.at("17:35").do(Cac_master)
+    schedule.every().tuesday.at("08:59").do(Cac_master)
+    schedule.every().tuesday.at("17:35").do(Cac_master)
+    schedule.every().wednesday.at("08:59").do(Cac_master)
+    schedule.every().wednesday.at("17:35").do(Cac_master)
+    schedule.every().thursday.at("08:59").do(Cac_master)
+    schedule.every().thursday.at("17:35").do(Cac_master)
+    schedule.every().friday.at("08:59").do(Cac_master)
+    schedule.every().friday.at("17:35").do(Cac_master)
 
 #-------Start futArb strategy--------
 #at 15:00 Paris time check the spread
@@ -411,45 +475,47 @@ def main():
     futArb_state = 'non_triggerable'
     initComboPrice = None
 
-    russel = Russel_CreateContract()
-    es = Es_CreateContract()
-    contractsFutArb = [russel, es]
-    
+ 
     
 
-    schedule.every().day.at("15:00").do(futArbInitial, contractsFutArb)
+    schedule.every().day.at("15:00").do(futArbInitial)
 
-    schedule.every().day.at("15:02").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:04").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:06").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:08").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:10").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:12").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:14").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:16").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:18").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:20").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:22").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:24").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:26").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:28").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:30").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:32").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:34").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:36").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:38").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:40").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:42").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:44").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:46").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:48").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:50").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:52").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:54").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:56").do(futArbMonitor, contractsFutArb)
-    schedule.every().day.at("15:58").do(futArbMonitor, contractsFutArb)
+    schedule.every().day.at("15:02").do(futArbMonitor)
+    schedule.every().day.at("15:04").do(futArbMonitor)
+    schedule.every().day.at("15:06").do(futArbMonitor)
+    schedule.every().day.at("15:08").do(futArbMonitor)
+    schedule.every().day.at("15:10").do(futArbMonitor)
+    schedule.every().day.at("15:12").do(futArbMonitor)
+    schedule.every().day.at("15:14").do(futArbMonitor)
+    schedule.every().day.at("15:16").do(futArbMonitor)
+    schedule.every().day.at("15:18").do(futArbMonitor)
+    schedule.every().day.at("15:20").do(futArbMonitor)
+    schedule.every().day.at("15:22").do(futArbMonitor)
+    schedule.every().day.at("15:24").do(futArbMonitor)
+    schedule.every().day.at("15:26").do(futArbMonitor)
+    schedule.every().day.at("15:28").do(futArbMonitor)
+    schedule.every().day.at("15:30").do(futArbMonitor)
+    schedule.every().day.at("15:32").do(futArbMonitor)
+    schedule.every().day.at("15:34").do(futArbMonitor)
+    schedule.every().day.at("15:36").do(futArbMonitor)
+    schedule.every().day.at("15:38").do(futArbMonitor)
+    schedule.every().day.at("15:40").do(futArbMonitor)
+    schedule.every().day.at("15:42").do(futArbMonitor)
+    schedule.every().day.at("15:44").do(futArbMonitor)
+    schedule.every().day.at("15:46").do(futArbMonitor)
+    schedule.every().day.at("15:48").do(futArbMonitor)
+    schedule.every().day.at("15:50").do(futArbMonitor)
+    schedule.every().day.at("15:52").do(futArbMonitor)
+    schedule.every().day.at("15:54").do(futArbMonitor)
+    schedule.every().day.at("15:56").do(futArbMonitor)
+    schedule.every().day.at("15:58").do(futArbMonitor)
 
-    schedule.every().day.at("16:00").do(futArbTimingClose, contractsFutArb)
+    schedule.every().day.at("16:00").do(futArbTimingClose)
+
+    schedule.every().day.at("12:40").do(futArbInitial)
+    schedule.every().day.at("12:17").do(futArbMonitor)
+    schedule.every().day.at("12:18").do(futArbMonitor)
+    schedule.every().day.at("12:19").do(futArbTimingClose)
 
     #schedule.every().tuesday.at("12:05").do(test)
     #schedule.every(2).seconds.do(test)
