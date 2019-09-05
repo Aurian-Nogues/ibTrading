@@ -1,9 +1,9 @@
-import datetime
+import datetime, time
 from ib_insync import *
-import pprint
 import schedule, time, sys
 import csv
 import re
+
 
 
 ib = IB()
@@ -13,13 +13,17 @@ cacOn_State = ''
 
 
 #//////// contracts /////////
-
 def Cac_CreateContract():
     checkConnection()
     #create contract for cac future expiring 20 sept 2019
     contract = Future(localSymbol="MFCU9", exchange = "MONEP")
     #ib.reqContractDetails(contract)
-    ib.qualifyContracts(contract)
+    try:
+        ib.qualifyContracts(contract)
+    except :
+        time.sleep(5)
+        checkConnection()
+        ib.qualifyContracts(contract)
     return contract
 
 def Es_CreateContract():
@@ -164,7 +168,7 @@ def writeLog(tradeLog, contract, direction, strategy):
                 execPriceLog = entry.message.split('@', 1)[1]
                 execQtyLog = execQtyLog
 
-                #build entry and append it to trade log
+                #build entry and append it to trade logtws
                 logEntry = [
                         strategy,
                         timeLog,
@@ -483,7 +487,7 @@ def main():
 #open position at 17:35 paris time, close it next day at 08:59 paris time
 
 
-    #schedule.every(3).seconds.do(Cac_master)
+    schedule.every(3).seconds.do(Cac_master)
     #schedule.every().friday.at("12:40").do(Cac_master, cac)
 
     schedule.every().monday.at("08:59").do(Cac_master)
