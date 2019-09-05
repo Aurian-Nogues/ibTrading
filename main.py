@@ -323,10 +323,7 @@ def futArbInitial():
     logEntry = [logStrategy, logTime, logRusselPrice, logEsPrice,logComboOpening, logCurrentCombo, logLowerBoundary, logHigherBoundary, logState, logConclusion]
     logFutArbMonitoring(logEntry)
 
-
-        
-
-        
+      
 
 def futArbMonitor():
     checkConnection()
@@ -345,6 +342,7 @@ def futArbMonitor():
     if futArb_state == 'non_triggerable': #strategy non triggerable because already closed
         print('futarb is not triggerable')
         print('either we did not go through futArbInitial or P&L is <> $500')
+        logConclusion = 'Did not trade, state was non triggerable'
 
     if futArb_state == 'closed': #check if we should be opening a position
 
@@ -356,14 +354,6 @@ def futArbMonitor():
         lowBoudary = initComboPrice -250
         highBoundary = initComboPrice + 250
 
-        print('////////Monitoriung futarb/////////')
-        print('futArb state = ' + str(futArb_state))
-        print('Russel price = ' + str(russelPrice))
-        print('ES price = ' + str(esPrice))
-        print('combo price = ' + str(initComboPrice))
-        print('Bounadaries are: ' + str(lowBoudary) + ' / ' + str(highBoundary))
-
-
         #tests---------------------------------------
         #currentComboPrice = initComboPrice -300
         #-------------------------------------------
@@ -373,18 +363,18 @@ def futArbMonitor():
             placeMarketOrder(es, "Sell", 1, 'FutArb')
             placeMarketOrder(russel, "Buy", 2, 'FutArb')
             futArb_state = 'open'
+            logConclusion = 'Combo price below low boundary, opened a position'
 
         elif currentComboPrice >= highBoundary:
             print('futArb: opening position +1ES -2RTY')
             placeMarketOrder(es, "Buy", 1, 'FutArb')
             placeMarketOrder(russel, "Sell", 2, 'FutArb')
             futArb_state = 'open'
+            logConclusion = 'Combo price above high boundary, opened a position'
         
         else:
-            print('Combo was outside boundaries')
             currentTimestamp = datetime.datetime.now()
-            print(str(currentTimestamp))
-            print('')
+            logConclusion = 'Combo price within boundaries, did nothing'
         
 
 
@@ -408,12 +398,36 @@ def futArbMonitor():
             liquidatePosition(russel, 'FutArb')
             futArb_state = 'non_triggerable'
 
+            logConclusion = 'Combo price below low boundary, closed position'
 
-        if currentComboPrice >= highBoundary:
+
+        elif currentComboPrice >= highBoundary:
             print('FutArb reached high boundary, closing position...')
             liquidatePosition(es, 'FutArb')
             liquidatePosition(russel, 'FutArb')
-            futArb_state = 'non_triggerable'            
+            futArb_state = 'non_triggerable'
+            logConclusion = 'Combo price above high boundary, closed position'
+        
+        else:
+            logConclusion = 'Combo price within boundaries, did nothing'
+
+    
+        #write to log
+    
+    logStrategy = 'futArb'
+    logTime = datetime.datetime.now()
+    logRusselPrice = russelPrice
+    logEsPrice = esPrice
+    logComboOpening = initComboPrice
+    logCurrentCombo = currentComboPrice
+    logLowerBoundary = lowBoudary
+    logHigherBoundary = highBoundary
+    logState = futArb_state 
+
+    logEntry = [logStrategy, logTime, logRusselPrice, logEsPrice,logComboOpening, logCurrentCombo, logLowerBoundary, logHigherBoundary, logState, logConclusion]
+    logFutArbMonitoring(logEntry)
+
+
 
 
 def futArbTimingClose():
@@ -429,9 +443,29 @@ def futArbTimingClose():
         liquidatePosition(es, 'FutArb')
         liquidatePosition(russel, 'FutArb')
         futArb_state = 'non_triggerable'
+        logConclusion = 'Position was open when time expired, closed it'
+
     elif futArb_state == 'closed':
         print("Futarb time window closed without opening position")
         futArb_state = 'non_triggerable'
+        logConclusion = 'Futarb time window closed without opening position'
+    else:
+        logConclusion = 'Futarb was non triggerable at time of closing'
+    
+            #write to log
+    
+    logStrategy = 'futArb'
+    logTime = datetime.datetime.now()
+    logRusselPrice = 'N/A'
+    logEsPrice = 'N/A'
+    logComboOpening = 'N/A'
+    logCurrentCombo = 'N/A'
+    logLowerBoundary = 'N/A'
+    logHigherBoundary = 'N/A'
+    logState = futArb_state 
+
+    logEntry = [logStrategy, logTime, logRusselPrice, logEsPrice,logComboOpening, logCurrentCombo, logLowerBoundary, logHigherBoundary, logState, logConclusion]
+    logFutArbMonitoring(logEntry)
 
     
 
@@ -512,10 +546,10 @@ def main():
 
     schedule.every().day.at("16:00").do(futArbTimingClose)
 
-    schedule.every().day.at("12:40").do(futArbInitial)
-    schedule.every().day.at("12:17").do(futArbMonitor)
-    schedule.every().day.at("12:18").do(futArbMonitor)
-    schedule.every().day.at("12:19").do(futArbTimingClose)
+    # schedule.every().day.at("12:05").do(futArbInitial)
+    # schedule.every().day.at("12:06").do(futArbMonitor)
+    # schedule.every().day.at("12:07").do(futArbMonitor)
+    # schedule.every().day.at("12:08").do(futArbTimingClose)
 
     #schedule.every().tuesday.at("12:05").do(test)
     #schedule.every(2).seconds.do(test)

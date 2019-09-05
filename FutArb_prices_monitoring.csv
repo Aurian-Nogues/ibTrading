@@ -1,4 +1,5 @@
 ﻿Strategy, Time, Russel price, ES price, combo opening, current combo, lower boundart, higher boundary, state, conclusion
-futArb,2019-09-05 12:40:02.814471,1503.8,2965.25,-42.34999999999991,-42.34999999999991,n/a,n/a,closed,Triggered futArb
-
-
+futArb,2019-09-05 12:05:02.797441,1503.2,2964.25,-42.15000000000009,-42.15000000000009,n/a,n/a,closed,Triggered futArb
+futArb,2019-09-05 12:06:02.975734,1503.1,2964.25,-42.15000000000009,-41.94999999999982,-292.1500000000001,207.8499999999999,closed,"Combo price within boundaries, did nothing"
+futArb,2019-09-05 12:07:02.188573,1503.2,2964.5,-42.15000000000009,-41.90000000000009,-292.1500000000001,207.8499999999999,closed,"Combo price within boundaries, did nothing"
+futArb,2019-09-05 12:08:00.468463,N/A,N/A,N/A,N/A,N/A,N/A,non_triggerable,Futarb time window closed without opening position
