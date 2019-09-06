@@ -1,0 +1,34 @@
+[Errno 104] Connection reset by peer
+Traceback (most recent call last):
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/ib_insync/util.py", line 251, in run
+    result = loop.run_until_complete(task)
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 484, in run_until_complete
+    return future.result()
+concurrent.futures._base.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "main.py", line 567, in <module>
+    main()
+  File "main.py", line 561, in main
+    schedule.run_pending()
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/schedule/__init__.py", line 563, in run_pending
+    default_scheduler.run_pending()
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/schedule/__init__.py", line 94, in run_pending
+    self._run_job(job)
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/schedule/__init__.py", line 147, in _run_job
+    ret = job.run()
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/schedule/__init__.py", line 466, in run
+    ret = self.job_func()
+  File "main.py", line 256, in Cac_master
+    cac = Cac_CreateContract()
+  File "main.py", line 22, in Cac_CreateContract
+    ib.qualifyContracts(contract)
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/ib_insync/ib.py", line 557, in qualifyContracts
+    return self._run(self.qualifyContractsAsync(*contracts))
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/ib_insync/ib.py", line 290, in _run
+    return util.run(*awaitables, timeout=self.RequestTimeout)
+  File "/home/ubuntu/.local/lib/python3.6/site-packages/ib_insync/util.py", line 253, in run
+    raise globalErrorEvent.value() or e
+ConnectionError: Socket disconnect

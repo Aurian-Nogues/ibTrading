@@ -487,7 +487,7 @@ def main():
 #open position at 17:35 paris time, close it next day at 08:59 paris time
 
 
-    schedule.every(3).seconds.do(Cac_master)
+    #schedule.every(3).seconds.do(Cac_master)
     #schedule.every().friday.at("12:40").do(Cac_master, cac)
 
     schedule.every().monday.at("08:59").do(Cac_master)
