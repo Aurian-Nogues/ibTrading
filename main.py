@@ -302,7 +302,7 @@ def futArbInitial():
         prices = getMultipleMarketPrices(contracts)
         russelPrice = prices[0]
         esPrice = prices[1]
-        initComboPrice = esPrice - 2*russelPrice
+        initComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
 
         print("/////////Triggered futArb///////")
         print('futArb state = ' + str(futArb_state))
@@ -353,7 +353,7 @@ def futArbMonitor():
         prices = getMultipleMarketPrices(contracts)
         russelPrice = prices[0]
         esPrice = prices[1]
-        currentComboPrice = esPrice - 2*russelPrice
+        currentComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
 
         lowBoudary = initComboPrice -250
         highBoundary = initComboPrice + 250
@@ -387,7 +387,7 @@ def futArbMonitor():
         prices = getMultipleMarketPrices(contracts)
         russelPrice = prices[0]
         esPrice = prices[1]
-        currentComboPrice = esPrice - 2*russelPrice
+        currentComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
 
         
         lowBoudary = initComboPrice -500 -250 #cut position if P&L is > 500
@@ -550,10 +550,10 @@ def main():
 
     schedule.every().day.at("16:00").do(futArbTimingClose)
 
-    # schedule.every().day.at("12:05").do(futArbInitial)
-    # schedule.every().day.at("12:06").do(futArbMonitor)
-    # schedule.every().day.at("12:07").do(futArbMonitor)
-    # schedule.every().day.at("12:08").do(futArbTimingClose)
+    schedule.every().day.at("17:13").do(futArbInitial)
+    schedule.every().day.at("17:14").do(futArbMonitor)
+    schedule.every().day.at("17:15").do(futArbMonitor)
+    schedule.every().day.at("17:16").do(futArbTimingClose)
 
     #schedule.every().tuesday.at("12:05").do(test)
     #schedule.every(2).seconds.do(test)
