@@ -8,9 +8,6 @@ import re
 
 ib = IB()
 
-#define global variables
-cacOn_State = ''
-
 
 #//////// contracts /////////
 def Cac_CreateContract():
@@ -253,26 +250,18 @@ def Cac_morningClose(contract):
         print('Algo is still running, will open position this evening')
 
 
-def Cac_master():
+def Cac_master(action):
     checkConnection()
     #This functions determines wether to open or close a trade in CAC_ON
 
     cac = Cac_CreateContract()
-    positionCac = getPosition(cac)
+    #positionCac = getPosition(cac)
 
-    if positionCac is None:
-        cacOn_State = 'Closed'
-        print('CacON status: ' +str(cacOn_State))
-    else:
-        cacOn_State = 'Open'
-        print('CacON status: ' +str(cacOn_State))
 
-    if cacOn_State == 'Closed':
+    if action == "Open":
             Cac_eveningOpen(cac)
-            cacOn_State = 'Open'
-    elif cacOn_State == 'Open':
+    elif action == "Close":
             Cac_morningClose(cac)
-            cacOn_State = 'Closed'
 
 
 
@@ -487,19 +476,21 @@ def main():
 #open position at 17:35 paris time, close it next day at 08:59 paris time
 
 
-    #schedule.every(3).seconds.do(Cac_master)
-    #schedule.every().friday.at("12:40").do(Cac_master, cac)
+    #schedule.every(3).seconds.do(Cac_master, "Open")
+    #schedule.every().day.at("17:39").do(Cac_master, "Open")
+    #schedule.every().day.at("17:40").do(Cac_master, "Close") 
 
-    schedule.every().monday.at("08:59").do(Cac_master)
-    schedule.every().monday.at("17:35").do(Cac_master)
-    schedule.every().tuesday.at("08:59").do(Cac_master)
-    schedule.every().tuesday.at("17:35").do(Cac_master)
-    schedule.every().wednesday.at("08:59").do(Cac_master)
-    schedule.every().wednesday.at("17:35").do(Cac_master)
-    schedule.every().thursday.at("08:59").do(Cac_master)
-    schedule.every().thursday.at("17:35").do(Cac_master)
-    schedule.every().friday.at("08:59").do(Cac_master)
-    schedule.every().friday.at("17:35").do(Cac_master)
+
+    schedule.every().monday.at("08:59").do(Cac_master, "Close")
+    schedule.every().monday.at("17:35").do(Cac_master, "Open")
+    schedule.every().tuesday.at("08:59").do(Cac_master, "Close")
+    schedule.every().tuesday.at("17:35").do(Cac_master, "Open")
+    schedule.every().wednesday.at("08:59").do(Cac_master, "Close")
+    schedule.every().wednesday.at("17:35").do(Cac_master, "Open")
+    schedule.every().thursday.at("08:59").do(Cac_master, "Close")
+    schedule.every().thursday.at("17:35").do(Cac_master, "Open")
+    schedule.every().friday.at("08:59").do(Cac_master, "Close")
+    schedule.every().friday.at("17:35").do(Cac_master, "Open")
 
 #-------Start futArb strategy--------
 #at 15:00 Paris time check the spread
@@ -550,10 +541,10 @@ def main():
 
     schedule.every().day.at("16:00").do(futArbTimingClose)
 
-    schedule.every().day.at("17:13").do(futArbInitial)
-    schedule.every().day.at("17:14").do(futArbMonitor)
-    schedule.every().day.at("17:15").do(futArbMonitor)
-    schedule.every().day.at("17:16").do(futArbTimingClose)
+    # schedule.every().day.at("17:13").do(futArbInitial)
+    # schedule.every().day.at("17:14").do(futArbMonitor)
+    # schedule.every().day.at("17:15").do(futArbMonitor)
+    # schedule.every().day.at("17:16").do(futArbTimingClose)
 
     #schedule.every().tuesday.at("12:05").do(test)
     #schedule.every(2).seconds.do(test)
