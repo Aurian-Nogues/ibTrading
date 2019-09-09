@@ -337,37 +337,6 @@ def futArbMonitor():
         print('either we did not go through futArbInitial or P&L is <> $500')
         logConclusion = 'Did not trade, state was non triggerable'
 
-    if futArb_state == 'closed': #check if we should be opening a position
-
-        prices = getMultipleMarketPrices(contracts)
-        russelPrice = prices[0]
-        esPrice = prices[1]
-        currentComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
-
-        lowBoudary = initComboPrice -250
-        highBoundary = initComboPrice + 250
-
-        #tests---------------------------------------
-        #currentComboPrice = initComboPrice -300
-        #-------------------------------------------
-
-        if currentComboPrice <= lowBoudary:
-            print('futArb: opening position -1ES +2RTY')
-            placeMarketOrder(es, "Sell", 1, 'FutArb')
-            placeMarketOrder(russel, "Buy", 2, 'FutArb')
-            futArb_state = 'open'
-            logConclusion = 'Combo price below low boundary, opened a position'
-
-        elif currentComboPrice >= highBoundary:
-            print('futArb: opening position +1ES -2RTY')
-            placeMarketOrder(es, "Buy", 1, 'FutArb')
-            placeMarketOrder(russel, "Sell", 2, 'FutArb')
-            futArb_state = 'open'
-            logConclusion = 'Combo price above high boundary, opened a position'
-        
-        else:
-            currentTimestamp = datetime.datetime.now()
-            logConclusion = 'Combo price within boundaries, did nothing'
         
 
 
@@ -403,6 +372,38 @@ def futArbMonitor():
         
         else:
             logConclusion = 'Combo price within boundaries, did nothing'
+    
+    if futArb_state == 'closed': #check if we should be opening a position
+
+        prices = getMultipleMarketPrices(contracts)
+        russelPrice = prices[0]
+        esPrice = prices[1]
+        currentComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
+
+        lowBoudary = initComboPrice -250
+        highBoundary = initComboPrice + 250
+
+        #tests---------------------------------------
+        #currentComboPrice = initComboPrice -300
+        #-------------------------------------------
+
+        if currentComboPrice <= lowBoudary:
+            print('futArb: opening position -1ES +2RTY')
+            placeMarketOrder(es, "Sell", 1, 'FutArb')
+            placeMarketOrder(russel, "Buy", 2, 'FutArb')
+            futArb_state = 'open'
+            logConclusion = 'Combo price below low boundary, opened a position'
+
+        elif currentComboPrice >= highBoundary:
+            print('futArb: opening position +1ES -2RTY')
+            placeMarketOrder(es, "Buy", 1, 'FutArb')
+            placeMarketOrder(russel, "Sell", 2, 'FutArb')
+            futArb_state = 'open'
+            logConclusion = 'Combo price above high boundary, opened a position'
+        
+        else:
+            currentTimestamp = datetime.datetime.now()
+            logConclusion = 'Combo price within boundaries, did nothing'
 
     
         #write to log
@@ -419,7 +420,6 @@ def futArbMonitor():
 
     logEntry = [logStrategy, logTime, logRusselPrice, logEsPrice,logComboOpening, logCurrentCombo, logLowerBoundary, logHigherBoundary, logState, logConclusion]
     logFutArbMonitoring(logEntry)
-
 
 
 
