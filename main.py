@@ -337,8 +337,12 @@ def futArbMonitor():
         print('either we did not go through futArbInitial or P&L is <> $500')
         logConclusion = 'Did not trade, state was non triggerable'
 
-        
-
+        russelPrice = 'N/A'
+        esPrice = 'N/A'
+        initComboPrice = 'N/A'
+        currentComboPrice = 'N/A'
+        lowBoudary = 'N/A'
+        highBoundary = 'N/A'
 
     if futArb_state == 'open': #check if p$L is <> $500 so we should close
 
