@@ -399,7 +399,7 @@ def futArbMonitor():
         #-------------------------------------------
 
         if currentComboPrice <= lowBoudary:
-            if currentComboPrice <= lowBoudary - 50:
+            if currentComboPrice <= lowBoudary - 100:
                 currentTimestamp = datetime.datetime.now()
                 logConclusion = 'Combo price below low boundary - 50, did nothing'
             else:
@@ -412,7 +412,7 @@ def futArbMonitor():
             
 
         elif currentComboPrice >= highBoundary:
-            if currentComboPrice >= highBoundary + 50:
+            if currentComboPrice >= highBoundary + 100:
                 currentTimestamp = datetime.datetime.now()
                 logConclusion = 'Combo price above high boundary + 50, did nothing'
             else:
