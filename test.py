@@ -6,7 +6,7 @@ ib = IB()
 def Cac_CreateContract():
     checkConnection()
     #create contract for cac future expiring 20 sept 2019
-    contract = Future(localSymbol="MFCU9", exchange = "MONEP")
+    contract = Future(localSymbol="MFCV9", exchange = "MONEP")
     #ib.reqContractDetails(contract)
     try:
         ib.qualifyContracts(contract)
@@ -35,5 +35,18 @@ def checkConnection():
                break
 
 
+
+def placeMarketOrder(contract, direction, quantity, strategy):
+    checkConnection()
+    order = MarketOrder(direction, quantity)
+    trade = ib.placeOrder(contract, order)
+    ib.sleep(1)
+    print('Market order placed, strategy is ' + str(strategy))
+    tradeLog = trade.log
+
+    print(tradeLog)
+
 cac = Cac_CreateContract()
-print(cac)
+
+placeMarketOrder(cac, "Buy", 1, "CAC_ON")
+

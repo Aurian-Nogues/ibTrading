@@ -13,7 +13,7 @@ ib = IB()
 def Cac_CreateContract():
     checkConnection()
     #create contract for cac future expiring 20 sept 2019
-    contract = Future(localSymbol="MFCU9", exchange = "MONEP")
+    contract = Future(localSymbol="MFCV9", exchange = "MONEP")
     #ib.reqContractDetails(contract)
     try:
         ib.qualifyContracts(contract)
@@ -26,7 +26,7 @@ def Cac_CreateContract():
 def Es_CreateContract():
     checkConnection()
     #create contract for S&P500 mini future expiring 20 sept 2019
-    contract = Future(localSymbol="ESU9", exchange = "GLOBEX")
+    contract = Future(localSymbol="ESZ9", exchange = "GLOBEX")
     #ib.reqContractDetails(contract)
     ib.qualifyContracts(contract)
     
@@ -43,7 +43,7 @@ def Nasdaq_CreateContract():
 def Russel_CreateContract():
     checkConnection()
     #create contract for Russel 2000 mini future expiring 20 sept 2019
-    contract = Future(localSymbol="RTYU9", exchange = "GLOBEX")
+    contract = Future(localSymbol="RTYZ9", exchange = "GLOBEX")
     #ib.reqContractDetails(contract)
     ib.qualifyContracts(contract)
     return contract
@@ -351,6 +351,8 @@ def futArbMonitor():
         esPrice = prices[1]
         currentComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
 
+        
+        #TODO change boundaries definition, this is wrong
         
         lowBoudary = initComboPrice -500 -250 #cut position if P&L is > 500
         highBoundary = initComboPrice + 500 + 250 #cut position if P&L is > 500
