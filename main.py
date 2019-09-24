@@ -322,6 +322,7 @@ def futArbMonitor():
     checkConnection()
     global futArb_state
     global initComboPrice
+    global futarb
 
     contracts = definecontractsFutArb()
 
@@ -351,11 +352,15 @@ def futArbMonitor():
         esPrice = prices[1]
         currentComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
 
-        
-        #TODO change boundaries definition, this is wrong
-        
-        lowBoudary = initComboPrice -500 -250 #cut position if P&L is > 500
-        highBoundary = initComboPrice + 500 + 250 #cut position if P&L is > 500
+        if futarb_openType == "low":
+            lowBoudary = initComboPrice -500 -250 #cut position if P&L is > 500
+            highBoundary = initComboPrice + 500 - 250 #cut position if P&L is > 500
+        elif futarb_openType == "high":
+            lowBoudary = initComboPrice -500 + 250 #cut position if P&L is > 500
+            highBoundary = initComboPrice + 500 + 250 #cut position if P&L is > 500
+
+
+
         #tests---------------------------------------
         #currentComboPrice = initComboPrice -800
         #-------------------------------------------
@@ -394,18 +399,31 @@ def futArbMonitor():
         #-------------------------------------------
 
         if currentComboPrice <= lowBoudary:
-            print('futArb: opening position -1ES +2RTY')
-            placeMarketOrder(es, "Sell", 1, 'FutArb')
-            placeMarketOrder(russel, "Buy", 2, 'FutArb')
-            futArb_state = 'open'
-            logConclusion = 'Combo price below low boundary, opened a position'
+            if currentComboPrice <= lowBoudary - 50:
+                currentTimestamp = datetime.datetime.now()
+                logConclusion = 'Combo price below low boundary - 50, did nothing'
+            else:
+                print('futArb: opening position -1ES +2RTY')
+                placeMarketOrder(es, "Sell", 1, 'FutArb')
+                placeMarketOrder(russel, "Buy", 2, 'FutArb')
+                futArb_state = 'open'
+                futarb_openType = "low"
+                logConclusion = 'Combo price below low boundary, opened a position'
+            
 
         elif currentComboPrice >= highBoundary:
-            print('futArb: opening position +1ES -2RTY')
-            placeMarketOrder(es, "Buy", 1, 'FutArb')
-            placeMarketOrder(russel, "Sell", 2, 'FutArb')
-            futArb_state = 'open'
-            logConclusion = 'Combo price above high boundary, opened a position'
+            if currentComboPrice >= highBoundary + 50:
+                currentTimestamp = datetime.datetime.now()
+                logConclusion = 'Combo price above high boundary + 50, did nothing'
+            else:
+
+                print('futArb: opening position +1ES -2RTY')
+                placeMarketOrder(es, "Buy", 1, 'FutArb')
+                placeMarketOrder(russel, "Sell", 2, 'FutArb')
+                futArb_state = 'open'
+                futarb_openType = "high"
+                logConclusion = 'Combo price above high boundary, opened a position'
+            
         
         else:
             currentTimestamp = datetime.datetime.now()
@@ -507,43 +525,76 @@ def main():
 
     global futArb_state
     global initComboPrice
+    global futarb_openType
+
     futArb_state = 'non_triggerable'
     initComboPrice = None
+    futarb_openType = None
 
  
     
 
     schedule.every().day.at("15:00").do(futArbInitial)
-
+    schedule.every().day.at("15:01").do(futArbMonitor)
     schedule.every().day.at("15:02").do(futArbMonitor)
+    schedule.every().day.at("15:03").do(futArbMonitor)
     schedule.every().day.at("15:04").do(futArbMonitor)
+    schedule.every().day.at("15:05").do(futArbMonitor)
     schedule.every().day.at("15:06").do(futArbMonitor)
+    schedule.every().day.at("15:07").do(futArbMonitor)
     schedule.every().day.at("15:08").do(futArbMonitor)
+    schedule.every().day.at("15:09").do(futArbMonitor)
     schedule.every().day.at("15:10").do(futArbMonitor)
+    schedule.every().day.at("15:11").do(futArbMonitor)
     schedule.every().day.at("15:12").do(futArbMonitor)
+    schedule.every().day.at("15:13").do(futArbMonitor)
     schedule.every().day.at("15:14").do(futArbMonitor)
+    schedule.every().day.at("15:15").do(futArbMonitor)
     schedule.every().day.at("15:16").do(futArbMonitor)
+    schedule.every().day.at("15:17").do(futArbMonitor)
     schedule.every().day.at("15:18").do(futArbMonitor)
+    schedule.every().day.at("15:19").do(futArbMonitor)
     schedule.every().day.at("15:20").do(futArbMonitor)
+    schedule.every().day.at("15:21").do(futArbMonitor)
     schedule.every().day.at("15:22").do(futArbMonitor)
+    schedule.every().day.at("15:23").do(futArbMonitor)
     schedule.every().day.at("15:24").do(futArbMonitor)
+    schedule.every().day.at("15:25").do(futArbMonitor)
     schedule.every().day.at("15:26").do(futArbMonitor)
+    schedule.every().day.at("15:27").do(futArbMonitor)
     schedule.every().day.at("15:28").do(futArbMonitor)
+    schedule.every().day.at("15:29").do(futArbMonitor)
     schedule.every().day.at("15:30").do(futArbMonitor)
+    schedule.every().day.at("15:31").do(futArbMonitor)
     schedule.every().day.at("15:32").do(futArbMonitor)
+    schedule.every().day.at("15:33").do(futArbMonitor)
     schedule.every().day.at("15:34").do(futArbMonitor)
+    schedule.every().day.at("15:35").do(futArbMonitor)
     schedule.every().day.at("15:36").do(futArbMonitor)
+    schedule.every().day.at("15:37").do(futArbMonitor)
     schedule.every().day.at("15:38").do(futArbMonitor)
+    schedule.every().day.at("15:39").do(futArbMonitor)
     schedule.every().day.at("15:40").do(futArbMonitor)
+    schedule.every().day.at("15:41").do(futArbMonitor)
     schedule.every().day.at("15:42").do(futArbMonitor)
+    schedule.every().day.at("15:43").do(futArbMonitor)
     schedule.every().day.at("15:44").do(futArbMonitor)
+    schedule.every().day.at("15:45").do(futArbMonitor)
     schedule.every().day.at("15:46").do(futArbMonitor)
+    schedule.every().day.at("15:47").do(futArbMonitor)
     schedule.every().day.at("15:48").do(futArbMonitor)
+    schedule.every().day.at("15:49").do(futArbMonitor)
     schedule.every().day.at("15:50").do(futArbMonitor)
+    schedule.every().day.at("15:51").do(futArbMonitor)
     schedule.every().day.at("15:52").do(futArbMonitor)
+    schedule.every().day.at("15:53").do(futArbMonitor)
     schedule.every().day.at("15:54").do(futArbMonitor)
+    schedule.every().day.at("15:55").do(futArbMonitor)
     schedule.every().day.at("15:56").do(futArbMonitor)
+    schedule.every().day.at("15:57").do(futArbMonitor)
     schedule.every().day.at("15:58").do(futArbMonitor)
+    schedule.every().day.at("15:59").do(futArbMonitor)
+
 
     schedule.every().day.at("16:00").do(futArbTimingClose)
 
