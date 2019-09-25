@@ -322,7 +322,7 @@ def futArbMonitor():
     checkConnection()
     global futArb_state
     global initComboPrice
-    global futarb
+    global futarb_openType
 
     contracts = definecontractsFutArb()
 
@@ -450,6 +450,7 @@ def futArbMonitor():
 def futArbTimingClose():
     checkConnection()
     global futArb_state
+    global futarb_openType
 
     contracts = definecontractsFutArb()
     russel = contracts[0]
@@ -481,6 +482,7 @@ def futArbTimingClose():
     logHigherBoundary = 'N/A'
     logState = futArb_state 
 
+    futarb_openType = None
     logEntry = [logStrategy, logTime, logRusselPrice, logEsPrice,logComboOpening, logCurrentCombo, logLowerBoundary, logHigherBoundary, logState, logConclusion]
     logFutArbMonitoring(logEntry)
 
