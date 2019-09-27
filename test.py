@@ -73,34 +73,41 @@ def sendJbOrders(contract, referencePrice):
     stopLossPrice = referencePrice -0.31 - 0.20
     downOrder = ib.bracketOrder(action = action, quantity = quantity, limitPrice = limitPrice, takeProfitPrice = takeProfitPrice, stopLossPrice = stopLossPrice)
 
-    upOrderId = upOrder[0].orderId
-    downOrderId = downOrder[0].orderId
+    # #add once cancel all parameters on parent orders
+    # upOrderId = upOrder[0].orderId
+    # ocaGroup = 'JB ' + str(upOrderId)
 
+    # # 1	Cancel all remaining orders with block.*
+    # # 2	Remaining orders are proportionately reduced in size with block.*
+    # # 3	Remaining orders are proportionately reduced in size with no block.
+    # ocaType = 2
 
-    #add once cancel all parameters on parent orders
-    ocaGroup = 'JB ' + str(upOrderId)
+    # upOrder[0].ocaGroup = ocaGroup
+    # upOrder[0].ocaType = ocaType
+    # downOrder[0].ocaGroup = ocaGroup
+    # downOrder[0].ocaType = ocaType
 
-    # 1	Cancel all remaining orders with block.*
-    # 2	Remaining orders are proportionately reduced in size with block.*
-    # 3	Remaining orders are proportionately reduced in size with no block.
-    ocaType = 2
-
-    upOrder[0].ocaGroup = ocaGroup
-    upOrder[0].ocaType = ocaType
-    downOrder[0].ocaGroup = ocaGroup
-    downOrder[0].ocaType = ocaType
+    #variables to store parent trades
+    upTrade = None
+    downTrade = None
 
     #send orders
     for o in upOrder:
         trade = ib.placeOrder(contract, o)
 
+        #store the first trade (which is the parent one) 
+        if upTrade == None:
+            upTrade = trade
+
     for o in downOrder:
         trade = ib.placeOrder(contract, o)
+        if downTrade == None:
+            downTrade = trade
     
-    return upOrder, downOrder
+    return upTrade, downTrade
 
 
-def JbClosing(upOrder, downOrder):
+def JbClosing(upTrade, downTrade):
     #get status of orders
     pass
 
@@ -121,8 +128,27 @@ contract = jb_CreateContract()
 price = getMarketPrice(contract)
 
 
-upOrder, downOrder = sendJbOrders(contract, price)
-JbClosing(upOrder, downOrder)
+upTrade, downTrade = sendJbOrders(contract, price)
+
+#get up and down trades order Id. If the trade is not active anymore orderId is 0
+upTradeId = upTrade.order.orderId
+downTradeId = downTrade.order.orderId
+
+#get all session orders
+orders = ib.orders()
+
+
+for order in orders:
+    if (order.orderId == upTradeId) or (order.orderId == downTradeId):
+        ib.sleep(2)
+        ib.cancelOrder(order)
+
+
+# print(upTrade)
+# print('//////////')
+# print(downTrade)
+
+
 
 
 
