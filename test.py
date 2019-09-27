@@ -1,4 +1,5 @@
 from ib_insync import *
+import csv
 
 #////////// generic functions ////////
 
@@ -46,7 +47,8 @@ def jb_CreateContract():
 
 #strategy specific
 
-def sendJbOrders(contract, referencePrice):
+def startJb(contract, referencePrice):
+    checkConnection()
 
     # action (str) – ‘BUY’ or ‘SELL’.
     # quantity (float) – Size of order.
@@ -87,61 +89,149 @@ def sendJbOrders(contract, referencePrice):
     # downOrder[0].ocaGroup = ocaGroup
     # downOrder[0].ocaType = ocaType
 
-    #variables to store parent trades
-    upTrade = None
-    downTrade = None
+    upTrade = sendJbOrders(upOrder)
+    downTrade = sendJbOrders(downOrder)
 
-    #send orders
-    for o in upOrder:
-        trade = ib.placeOrder(contract, o)
-
-        #store the first trade (which is the parent one) 
-        if upTrade == None:
-            upTrade = trade
-
-    for o in downOrder:
-        trade = ib.placeOrder(contract, o)
-        if downTrade == None:
-            downTrade = trade
-    
     return upTrade, downTrade
 
 
+    
+
+def sendJbOrders(orders):
+    #variables to store parent trades
+    parentTrade = None
+
+    #send orders
+    for o in orders:
+        trade = ib.placeOrder(contract, o)
+
+        #label child or parent order
+        parentId = trade.order.parentId
+        if parentId == 0:
+            orderRef = trade.order.orderId
+            orderGroup = 'Parent order ' + str(orderRef)
+        else:
+            orderGroup = 'Child order ' + str(parentId)
+
+        #define which price is relevant, limit orders use lmtPrice, stop loss orders use auxPrice. The one not used is set at 1.7976931348623157e+308 in ib
+        limitPrice = trade.order.lmtPrice
+        if limitPrice < 10000000:
+            price = limitPrice
+        else:
+            price = trade.order.auxPrice
+
+
+        #Build log entry and add it to logs
+        strategyLog = 'JGB'
+        timeLog = trade.log[0].time
+        contractLog = trade.contract.symbol
+        groupLog = orderGroup
+        directionLog = trade.order.action
+        quantityLog = trade.order.totalQuantity
+        priceLog = price
+        
+        logEntry = [
+            strategyLog,
+            timeLog,
+            contractLog,
+            groupLog,
+            directionLog,
+            quantityLog,
+            priceLog
+        ]
+
+        writeJbLog(logEntry, 'Action')
+
+        #store the first trade (which is the parent one) 
+        if parentTrade == None:
+            parentTrade = trade
+    
+    return parentTrade
+
+
+
 def JbClosing(upTrade, downTrade):
-    #get status of orders
-    pass
+    checkConnection()
+    #get up and down trades order Id. If the trade is not active anymore orderId is 0
+    upTradeId = upTrade.order.orderId
+    downTradeId = downTrade.order.orderId
+    
+    #get all session orders
+    orders = ib.orders()
+
+    #if orders are still open, cancel them
+    for order in orders:
+        if (order.orderId == upTradeId) or (order.orderId == downTradeId):
+            ib.sleep(2)
+            ib.cancelOrder(order)
+    
+
+    #TODO If positions are open, close them
 
 
+    
+
+def jbSummary():
+    #recover exec summary, build P&L and logs
+
+    dailyTrades = ib.fills() #returns a list of objects where [0] is contract and [1] is exec details
+    for trade in dailyTrades:
+        contract = trade[0]
+        execDetails = trade[1]
+        if contract.symbol == 'JGB':
+            #build a log entry
+
+            strategyLog = 'JGB'
+            timeLog = execDetails.time
+            contractLog = contract.symbol
+            directionLog = execDetails.side
+            quantityLog = execDetails.shares
+            priceLog = execDetails.avgPrice
+
+            logEntry = [
+                strategyLog,
+                timeLog,
+                contractLog,
+                directionLog,
+                quantityLog,
+                priceLog
+            ]
+
+            writeJbLog(logEntry, "Trade")
 
 
+def writeJbLog(logEntry, logType):
 
+    if logType == 'Trade': 
+        with open('JB_trade_log.csv', 'a') as f:
+            writer = csv.writer(f, lineterminator = '\n')
+            writer.writerow(logEntry)
+    
+    if logType == 'Action':
+        with open('JB_action_log.csv', 'a') as f:
+            writer = csv.writer(f, lineterminator = '\n')
+            writer.writerow(logEntry)
 
-
-
-
-
-checkConnection()
 
 contract = jb_CreateContract()
-
-#TODO change this to get reference price, careful when price returned is nan
 price = getMarketPrice(contract)
+if price =="nan":
+    print('Price was nan')
+    
+upTrade, downTrade = startJb(contract, price)
+ib.sleep(2)
+JbClosing(upTrade, downTrade)
+
+#jbSummary()
 
 
-upTrade, downTrade = sendJbOrders(contract, price)
-
-#get up and down trades order Id. If the trade is not active anymore orderId is 0
-upTradeId = upTrade.order.orderId
-downTradeId = downTrade.order.orderId
-
-#get all session orders
-orders = ib.orders()
 
 
-for order in orders:
-    if (order.orderId == upTradeId) or (order.orderId == downTradeId):
-        ib.sleep(2)
-        ib.cancelOrder(order)
+
+
+
+
+
 
 
 # print(upTrade)
