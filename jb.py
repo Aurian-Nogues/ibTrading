@@ -1,6 +1,8 @@
 from ib_insync import *
 import csv
 
+import time
+
 
 
 #////////// generic functions ////////
@@ -33,18 +35,7 @@ def getMarketPrice(contract):
 
     return ticker.marketPrice()
 
-def jb_CreateContract():
-    checkConnection()
-    #create contract for Japanese Bond expirint 13/12/2019
-    contract = Future(localSymbol="164120001", exchange = "OSE.JPN")
-    #ib.reqContractDetails(contract)
-    try:
-        ib.qualifyContracts(contract)
-    except :
-        time.sleep(5)
-        checkConnection()
-        ib.qualifyContracts(contract)
-    return contract
+
 
 
 #strategy specific

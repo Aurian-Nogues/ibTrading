@@ -5,11 +5,13 @@ import csv
 import re
 
 
-
 ib = IB()
 
 
-#//////// contracts /////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////Contracts/////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 def Cac_CreateContract():
     checkConnection()
     #create contract for cac future expiring 20 sept 2019
@@ -48,8 +50,23 @@ def Russel_CreateContract():
     ib.qualifyContracts(contract)
     return contract
 
+def jb_CreateContract():
+    checkConnection()
+    #create contract for Japanese Bond expirint 13/12/2019
+    contract = Future(localSymbol="164120001", exchange = "OSE.JPN")
+    #ib.reqContractDetails(contract)
+    try:
+        ib.qualifyContracts(contract)
+    except :
+        time.sleep(5)
+        checkConnection()
+        ib.qualifyContracts(contract)
+    return contract
 
-#//////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////Shared functions/////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 def checkConnection():
@@ -186,32 +203,10 @@ def writeLog(tradeLog, contract, direction, strategy):
                             writer = csv.writer(f, lineterminator = '\n')
                             writer.writerow(logEntry)
 
-
-def logFutArbMonitoring(logList):
-    #13 entries
-    logEntry = []
-    for entry in logList:
-        logEntry.append(entry)
-
-    with open('FutArb_prices_monitoring.csv', 'a') as f:
-        writer = csv.writer(f, lineterminator = '\n')
-        writer.writerow(logEntry)
-
-
-
-def liquidatePosition(contract, strategy):
-    position = getPosition(contract)
-    quantity = position[2]
-    if quantity >0:
-        direction = "Sell"
-    elif quantity < 0:
-        direction = "Buy"
-        quantity = abs(quantity)
-
-
-    placeMarketOrder(contract,direction, quantity, strategy )
-    print(str(strategy) + ', ' + str(contract) + ', ''Liquidation order placed')
-
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////CAC/////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 def Cac_eveningOpen(contract):
     checkConnection()
@@ -264,6 +259,11 @@ def Cac_master(action):
 
 
 
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////FUTARB/////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 def definecontractsFutArb():
     russel = Russel_CreateContract()
     es = Es_CreateContract()
@@ -282,22 +282,23 @@ def futArbInitial():
     today = datetime.datetime.today()
     weekday = today.weekday() #returns integer, monday=0, tuesday=1...
     
-    if weekday <= 5: #if today is monday to friday
+    if weekday > 5: #if today is monday to friday
+        return
         
         
-        futArb_state = 'closed'
+    futArb_state = 'closed'
 
-        prices = getMultipleMarketPrices(contracts)
-        russelPrice = prices[0]
-        esPrice = prices[1]
-        initComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
+    prices = getMultipleMarketPrices(contracts)
+    russelPrice = prices[0]
+    esPrice = prices[1]
+    initComboPrice = (esPrice - 2*russelPrice) * 50 + 20000
 
-        print("/////////Triggered futArb///////")
-        print('futArb state = ' + str(futArb_state))
-        print('Russel price = ' + str(russelPrice))
-        print('ES price = ' + str(esPrice))
-        print('combo price = ' + str(initComboPrice))
-        print('//////////////////////////////// \n')
+    print("/////////Triggered futArb///////")
+    print('futArb state = ' + str(futArb_state))
+    print('Russel price = ' + str(russelPrice))
+    print('ES price = ' + str(esPrice))
+    print('combo price = ' + str(initComboPrice))
+    print('//////////////////////////////// \n')
 
     #write to log
     
@@ -485,25 +486,297 @@ def futArbTimingClose():
     logEntry = [logStrategy, logTime, logRusselPrice, logEsPrice,logComboOpening, logCurrentCombo, logLowerBoundary, logHigherBoundary, logState, logConclusion]
     logFutArbMonitoring(logEntry)
 
+
+def logFutArbMonitoring(logList):
+    #13 entries
+    logEntry = []
+    for entry in logList:
+        logEntry.append(entry)
+
+    with open('FutArb_prices_monitoring.csv', 'a') as f:
+        writer = csv.writer(f, lineterminator = '\n')
+        writer.writerow(logEntry)
+
+
+
+def liquidatePosition(contract, strategy):
+    position = getPosition(contract)
+    quantity = position[2]
+    if quantity >0:
+        direction = "Sell"
+    elif quantity < 0:
+        direction = "Buy"
+        quantity = abs(quantity)
+
+
+    placeMarketOrder(contract,direction, quantity, strategy )
+    print(str(strategy) + ', ' + str(contract) + ', ''Liquidation order placed')
     
 
 def test():
     print("working")
 
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////Japanese bonds/////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#//////////// app ///////////////////////
+def getJbReferencePrice():
+    today = datetime.datetime.today()
+    weekday = today.weekday() #returns integer, monday=0, tuesday=1...
+    
+    if weekday > 5: #if today is monday to friday
+        return
+
+    global jbContract
+    global jbRefPrice
+    
+    jbContract = jb_CreateContract()
+    jbRefPrice = getMarketPrice(jbContract)
+
+    print('Started JB, reference price is ' + str(jbRefPrice))
+    
+
+
+def startJb():
+    today = datetime.datetime.today()
+    weekday = today.weekday() #returns integer, monday=0, tuesday=1...
+    
+    if weekday > 5: #if today is monday to friday
+        return
+    checkConnection()
+    global upTrade
+    global downTrade
+    global jbRefPrice
+    global jbContract
+    
+
+
+
+
+    # action (str) – ‘BUY’ or ‘SELL’.
+    # quantity (float) – Size of order.
+    # limitPrice (float) – Limit price of entry order.
+    # takeProfitPrice (float) – Limit price of profit order.
+    # stopLossPrice (float) – Stop price of loss order.
+    
+    #create 2 bracker orders
+    # order = ib.bracketOrder(action, quantity, limitPrice, takeProfitPrice, stopLossPrice)
+
+    action = 'SELL'
+    quantity = 1
+    limitPrice = jbRefPrice + 0.21
+    takeProfitPrice = jbRefPrice + 0.21 - 0.10
+    stopLossPrice = jbRefPrice + 0.21 + 0.20
+    upOrder = ib.bracketOrder(action = action, quantity = quantity, limitPrice = limitPrice, takeProfitPrice = takeProfitPrice, stopLossPrice = stopLossPrice)
+
+    #ocaGroup = ocaGroup, ocaType = ocaType
+
+    action = 'BUY'
+    quantity = 1
+    limitPrice = jbRefPrice -0.31
+    takeProfitPrice = jbRefPrice -0.31 + 0.10
+    stopLossPrice = jbRefPrice -0.31 - 0.20
+    downOrder = ib.bracketOrder(action = action, quantity = quantity, limitPrice = limitPrice, takeProfitPrice = takeProfitPrice, stopLossPrice = stopLossPrice)
+
+    # #add once cancel all parameters on parent orders
+    # upOrderId = upOrder[0].orderId
+    # ocaGroup = 'JB ' + str(upOrderId)
+
+    # # 1	Cancel all remaining orders with block.*
+    # # 2	Remaining orders are proportionately reduced in size with block.*
+    # # 3	Remaining orders are proportionately reduced in size with no block.
+    # ocaType = 2
+
+    # upOrder[0].ocaGroup = ocaGroup
+    # upOrder[0].ocaType = ocaType
+    # downOrder[0].ocaGroup = ocaGroup
+    # downOrder[0].ocaType = ocaType
+
+    upTrade = sendJbOrders(upOrder)
+    downTrade = sendJbOrders(downOrder)
+
+    print("Sent orders to JB")
+
+
+
+    
+
+def sendJbOrders(orders):
+    global jbContract
+
+    #variables to store parent trades
+    parentTrade = None
+
+    #send orders
+    for o in orders:
+        trade = ib.placeOrder(jbContract, o)
+
+        #label child or parent order
+        parentId = trade.order.parentId
+        if parentId == 0:
+            orderRef = trade.order.orderId
+            orderGroup = 'Parent order ' + str(orderRef)
+        else:
+            orderGroup = 'Child order ' + str(parentId)
+
+        #define which price is relevant, limit orders use lmtPrice, stop loss orders use auxPrice. The one not used is set at 1.7976931348623157e+308 in ib
+        limitPrice = trade.order.lmtPrice
+        if limitPrice < 10000000:
+            price = limitPrice
+        else:
+            price = trade.order.auxPrice
+
+
+        #Build log entry and add it to logs
+        strategyLog = 'JGB'
+        timeLog = trade.log[0].time
+        contractLog = trade.contract.symbol
+        groupLog = orderGroup
+        directionLog = trade.order.action
+        quantityLog = trade.order.totalQuantity
+        priceLog = price
+        
+        logEntry = [
+            strategyLog,
+            timeLog,
+            contractLog,
+            groupLog,
+            directionLog,
+            quantityLog,
+            priceLog
+        ]
+
+        writeJbLog(logEntry, 'Action')
+
+        #store the first trade (which is the parent one) 
+        if parentTrade == None:
+            parentTrade = trade
+    
+    return parentTrade
+
+
+def JbClosing():
+    today = datetime.datetime.today()
+    weekday = today.weekday() #returns integer, monday=0, tuesday=1...
+    
+    if weekday > 5: #if today is monday to friday
+        return
+    checkConnection()
+    global upTrade
+    global downTrade
+    
+    #get up and down trades order Id. If the trade is not active anymore orderId is 0
+    upTradeId = upTrade.order.orderId
+    downTradeId = downTrade.order.orderId
+    
+    #get all session orders
+    orders = ib.orders()
+
+    #if orders are still open, cancel them
+    for order in orders:
+        if (order.orderId == upTradeId) or (order.orderId == downTradeId):
+            ib.sleep(2)
+            ib.cancelOrder(order)
+
+    
+    #If positions are open, close them
+    JbClosePositions()
+
+    ib.sleep(5)
+    #write logs
+    jbSummary()
+
+    print('Closed JB and wrote logs')
+
+
+
+def JbClosePositions():
+    global jbContract
+    positions = ib.positions()
+
+    #figure out  if we have a position
+    for position in positions:
+
+        if position[1] == jbContract:
+            quantity = position[2]
+
+            #prepare trade
+            if quantity >0:
+                direction = "Sell"
+            elif quantity < 0:
+                direction = "Buy"
+                quantity = abs(quantity)
+            
+            order = MarketOrder(direction, quantity)
+
+            #send trade
+            ib.placeOrder(jbContract,order)
+
+
+def jbSummary():
+    #recover exec summary, build P&L and logs
+
+    dailyTrades = ib.fills() #returns a list of objects where [0] is contract and [1] is exec details
+
+    for trade in dailyTrades:
+        contract = trade[0]
+        execDetails = trade[1]
+        if contract.symbol == 'JGB':
+            #build a log entry
+
+            strategyLog = 'JGB'
+            timeLog = execDetails.time
+            contractLog = contract.symbol
+            directionLog = execDetails.side
+            quantityLog = execDetails.shares
+            priceLog = execDetails.avgPrice
+
+            logEntry = [
+                strategyLog,
+                timeLog,
+                contractLog,
+                directionLog,
+                quantityLog,
+                priceLog
+            ]
+
+            writeJbLog(logEntry, "Trade")
+
+
+def writeJbLog(logEntry, logType):
+
+    if logType == 'Trade': 
+        with open('JB_trade_log.csv', 'a') as f:
+            writer = csv.writer(f, lineterminator = '\n')
+            writer.writerow(logEntry)
+    
+    if logType == 'Action':
+        with open('JB_action_log.csv', 'a') as f:
+            writer = csv.writer(f, lineterminator = '\n')
+            writer.writerow(logEntry)
+
+
+
+
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////APP/////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 def main():
     checkConnection()
 
-#-------Start CAC_on strategy--------
-#open position at 17:35 paris time, close it next day at 08:59 paris time
+# #-------Start CAC_on strategy--------
+# #open position at 17:35 paris time, close it next day at 08:59 paris time
 
 
-    #schedule.every(3).seconds.do(Cac_master, "Open")
-    #schedule.every().day.at("17:39").do(Cac_master, "Open")
-    #schedule.every().day.at("17:40").do(Cac_master, "Close") 
+#     #schedule.every(3).seconds.do(Cac_master, "Open")
+#     #schedule.every().day.at("17:39").do(Cac_master, "Open")
+#     #schedule.every().day.at("17:40").do(Cac_master, "Close") 
 
 
     schedule.every().monday.at("08:59").do(Cac_master, "Close")
@@ -517,11 +790,11 @@ def main():
     schedule.every().friday.at("08:59").do(Cac_master, "Close")
     schedule.every().friday.at("17:35").do(Cac_master, "Open")
 
-#-------Start futArb strategy--------
-#at 15:00 Paris time check the spread
-#if spread deviates by +/- $250 in the next hour open a position
-#if P&L is +/- $500 close position
-#if after 1 hour position is still open, close it
+# #-------Start futArb strategy--------
+# #at 15:00 Paris time check the spread
+# #if spread deviates by +/- $250 in the next hour open a position
+# #if P&L is +/- $500 close position
+# #if after 1 hour position is still open, close it
 
 
     global futArb_state
@@ -599,13 +872,24 @@ def main():
 
     schedule.every().day.at("16:00").do(futArbTimingClose)
 
-    # schedule.every().day.at("17:13").do(futArbInitial)
-    # schedule.every().day.at("17:14").do(futArbMonitor)
-    # schedule.every().day.at("17:15").do(futArbMonitor)
-    # schedule.every().day.at("17:16").do(futArbTimingClose)
 
-    #schedule.every().tuesday.at("12:05").do(test)
-    #schedule.every(2).seconds.do(test)
+
+    #-------Start Japanese bonds strategy--------
+
+    # get reference price at 20:00 Paris time D-1
+    # place trades before execution window
+    # window is 1:45 am to 7:00 am
+    # at 7:00 am close all positions and orders
+
+
+    global upTrade
+    global downTrade
+    global jbRefPrice
+
+    schedule.every().day.at("20:00").do(getJbReferencePrice)
+    schedule.every().day.at("20:01").do(startJb)
+    schedule.every().day.at("07:00").do(JbClosing)
+
 
 
 
@@ -613,8 +897,6 @@ def main():
     while True:
         schedule.run_pending()
         time.sleep(1)
-
-
 
 if __name__ == "__main__":
     main()
