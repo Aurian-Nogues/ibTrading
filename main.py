@@ -66,7 +66,7 @@ def checkConnection():
 
 
 def getPosition(contract):
-    checkConnection()
+    #checkConnection()
     #returns the position for a given contract
     #returns None if there is no position matching the contract
 
@@ -165,7 +165,7 @@ def writeLog(tradeLog, contract, direction, strategy):
                 execPriceLog = entry.message.split('@', 1)[1]
                 execQtyLog = execQtyLog
 
-                #build entry and append it to trade logtws
+                #build entry and append it to trade logs
                 logEntry = [
                         strategy,
                         timeLog,
@@ -200,7 +200,6 @@ def logFutArbMonitoring(logList):
 
 
 def liquidatePosition(contract, strategy):
-    checkConnection()
     position = getPosition(contract)
     quantity = position[2]
     if quantity >0:

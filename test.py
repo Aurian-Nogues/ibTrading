@@ -1,6 +1,8 @@
 from ib_insync import *
 import csv
 
+
+
 #////////// generic functions ////////
 
 ib = IB()
@@ -150,8 +152,8 @@ def sendJbOrders(orders):
 
 
 
-def JbClosing(upTrade, downTrade):
-    checkConnection()
+def JbClosing(upTrade, downTrade, Contract):
+    
     #get up and down trades order Id. If the trade is not active anymore orderId is 0
     upTradeId = upTrade.order.orderId
     downTradeId = downTrade.order.orderId
@@ -164,9 +166,46 @@ def JbClosing(upTrade, downTrade):
         if (order.orderId == upTradeId) or (order.orderId == downTradeId):
             ib.sleep(2)
             ib.cancelOrder(order)
+
+    
+    #If positions are open, close them
+    JbClosePositions(contract)
+    #write logs
+    jbSummary()
+
+
+
     
 
-    #TODO If positions are open, close them
+    #log summary of executed trades
+    jbSummary()
+
+def JbClosePositions(contract):
+    positions = ib.positions()
+
+    #figure out  if we have a position
+    for position in positions:
+
+        if position[1] == contract:
+            quantity = position[2]
+
+            #prepare trade
+            if quantity >0:
+                direction = "Sell"
+            elif quantity < 0:
+                direction = "Buy"
+                quantity = abs(quantity)
+            
+            order = MarketOrder(direction, quantity)
+
+            #send trade
+            trade = ib.placeOrder(contract,order)
+
+        
+
+
+
+
 
 
     
@@ -213,6 +252,10 @@ def writeJbLog(logEntry, logType):
             writer.writerow(logEntry)
 
 
+
+
+checkConnection()
+
 contract = jb_CreateContract()
 price = getMarketPrice(contract)
 if price =="nan":
@@ -220,23 +263,9 @@ if price =="nan":
     
 upTrade, downTrade = startJb(contract, price)
 ib.sleep(2)
-JbClosing(upTrade, downTrade)
-
-#jbSummary()
+JbClosing(upTrade, downTrade, contract)
 
 
-
-
-
-
-
-
-
-
-
-# print(upTrade)
-# print('//////////')
-# print(downTrade)
 
 
 
