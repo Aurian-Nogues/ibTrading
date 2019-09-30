@@ -522,6 +522,7 @@ def test():
 #/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 def getJbReferencePrice():
+
     today = datetime.datetime.today()
     weekday = today.weekday() #returns integer, monday=0, tuesday=1...
     
@@ -535,6 +536,15 @@ def getJbReferencePrice():
     
     jbContract = jb_CreateContract()
     jbRefPrice = getMarketPrice(jbContract)
+    while True:
+        if jbRefPrice == "nan":
+            ib.sleep(2)
+            print("Could not recover price, trying again")
+            checkConnection()
+            jbRefPrice = getMarketPrice(jbContract)
+        else:
+            print("Successfully got JB price : " + str(jbRefPrice))
+            break
 
     print('Started JB, reference price is ' + str(jbRefPrice))
     
@@ -600,7 +610,9 @@ def startJb():
 
 
 def sendJbOrders(orders):
+    checkConnection()
     global jbContract
+    jbContract = jb_CreateContract()
 
     #variables to store parent trades
     parentTrade = None
@@ -654,6 +666,7 @@ def sendJbOrders(orders):
 
 
 def JbClosing():
+
     today = datetime.datetime.today()
     weekday = today.weekday() #returns integer, monday=0, tuesday=1...
     
@@ -690,6 +703,8 @@ def JbClosing():
 
 def JbClosePositions():
     global jbContract
+    jbContract = jb_CreateContract()
+
     positions = ib.positions()
 
     #figure out  if we have a position
@@ -712,6 +727,7 @@ def JbClosePositions():
 
 
 def jbSummary():
+    checkConnection()
     #recover exec summary, build P&L and logs
 
     dailyTrades = ib.fills() #returns a list of objects where [0] is contract and [1] is exec details
@@ -883,8 +899,8 @@ def main():
     global downTrade
     global jbRefPrice
 
-    schedule.every().day.at("20:00").do(getJbReferencePrice)
-    schedule.every().day.at("20:01").do(startJb)
+    schedule.every().day.at("11:00").do(getJbReferencePrice)
+    schedule.every().day.at("11:01").do(startJb)
     schedule.every().day.at("07:00").do(JbClosing)
 
 
@@ -894,6 +910,7 @@ def main():
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
 if __name__ == "__main__":
     main()
