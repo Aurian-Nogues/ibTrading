@@ -531,6 +531,8 @@ def getJbReferencePrice():
     global jbContract
     global jbRefPrice
     
+    checkConnection()
+    
     jbContract = jb_CreateContract()
     jbRefPrice = getMarketPrice(jbContract)
 
@@ -544,16 +546,14 @@ def startJb():
     
     if weekday > 5: #if today is monday to friday
         return
+
     checkConnection()
+
     global upTrade
     global downTrade
     global jbRefPrice
     global jbContract
     
-
-
-
-
     # action (str) – ‘BUY’ or ‘SELL’.
     # quantity (float) – Size of order.
     # limitPrice (float) – Limit price of entry order.
@@ -598,9 +598,6 @@ def startJb():
 
     print("Sent orders to JB")
 
-
-
-    
 
 def sendJbOrders(orders):
     global jbContract
