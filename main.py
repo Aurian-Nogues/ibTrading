@@ -537,7 +537,7 @@ def getJbReferencePrice():
     jbContract = jb_CreateContract()
     jbRefPrice = getMarketPrice(jbContract)
     while True:
-        if jbRefPrice == "nan":
+        if type(jbRefPrice) != float:
             ib.sleep(2)
             print("Could not recover price, trying again")
             checkConnection()
@@ -899,8 +899,8 @@ def main():
     global downTrade
     global jbRefPrice
 
-    schedule.every().day.at("20:01").do(getJbReferencePrice)
-    schedule.every().day.at("20:02").do(startJb)
+    schedule.every().day.at("05:04").do(getJbReferencePrice)
+    schedule.every().day.at("05:06").do(startJb)
     schedule.every().day.at("07:00").do(JbClosing)
 
 
