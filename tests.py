@@ -4,6 +4,7 @@ from ib_insync import *
 import schedule, time, sys
 import csv
 import re
+import math
 
 
 ib = IB()
@@ -63,10 +64,11 @@ def getJbReferencePrice():
     jbRefPrice = getMarketPrice(jbContract)
     print('/////')
     print(type(jbRefPrice))
+    print(jbRefPrice)
     print('/////')
     while True:
-        if type(jbRefPrice) == float:
-            ib.sleep(2)
+        if math.isnan(jbRefPrice):
+            ib.sleep(5)
             print("Could not recover jb price, trying again")
             checkConnection()
             jbRefPrice = getMarketPrice(jbContract)
