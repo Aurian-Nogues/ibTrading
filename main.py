@@ -1,6 +1,6 @@
 import datetime, time
 from ib_insync import *
-import schedule, time, sys
+import schedule, time, sys, math
 import csv
 import re
 
@@ -537,7 +537,7 @@ def getJbReferencePrice():
     jbContract = jb_CreateContract()
     jbRefPrice = getMarketPrice(jbContract)
     while True:
-        if type(jbRefPrice) != float:
+        if math.isnan(jbRefPrice):
             ib.sleep(2)
             print("Could not recover price, trying again")
             checkConnection()
@@ -575,18 +575,31 @@ def startJb():
 
     action = 'SELL'
     quantity = 1
-    limitPrice = jbRefPrice + 0.21
-    takeProfitPrice = jbRefPrice + 0.21 - 0.10
-    stopLossPrice = jbRefPrice + 0.21 + 0.20
+    # limitPrice = jbRefPrice + 0.21
+    # takeProfitPrice = jbRefPrice + 0.21 - 0.10
+    # stopLossPrice = jbRefPrice + 0.21 + 0.20
+    limitPrice = jbRefPrice + 0.11
+    takeProfitPrice = jbRefPrice + 0.11 - 0.10
+    stopLossPrice = jbRefPrice + 0.11 + 0.20
+
+
+
+
     upOrder = ib.bracketOrder(action = action, quantity = quantity, limitPrice = limitPrice, takeProfitPrice = takeProfitPrice, stopLossPrice = stopLossPrice)
 
     #ocaGroup = ocaGroup, ocaType = ocaType
 
     action = 'BUY'
     quantity = 1
-    limitPrice = jbRefPrice -0.31
-    takeProfitPrice = jbRefPrice -0.31 + 0.10
-    stopLossPrice = jbRefPrice -0.31 - 0.20
+    # limitPrice = jbRefPrice -0.31
+    # takeProfitPrice = jbRefPrice -0.31 + 0.10
+    # stopLossPrice = jbRefPrice -0.31 - 0.20
+    limitPrice = jbRefPrice -0.11
+    takeProfitPrice = jbRefPrice -0.11 + 0.10
+    stopLossPrice = jbRefPrice -0.11 - 0.20
+
+
+
     downOrder = ib.bracketOrder(action = action, quantity = quantity, limitPrice = limitPrice, takeProfitPrice = takeProfitPrice, stopLossPrice = stopLossPrice)
 
     # #add once cancel all parameters on parent orders
