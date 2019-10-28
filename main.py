@@ -15,7 +15,7 @@ ib = IB()
 def Cac_CreateContract():
     checkConnection()
     #create contract for cac future expiring 20 sept 2019
-    contract = Future(localSymbol="MFCV9", exchange = "MONEP")
+    contract = Future(localSymbol="MFCX9", exchange = "MONEP")
     #ib.reqContractDetails(contract)
     try:
         ib.qualifyContracts(contract)

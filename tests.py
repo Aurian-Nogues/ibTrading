@@ -46,6 +46,18 @@ def getMarketPrice(contract):
 
     return ticker.marketPrice()
 
+def Cac_CreateContract():
+    checkConnection()
+    #create contract for cac future expiring 20 sept 2019
+    contract = Future(localSymbol="MFCX9", exchange = "MONEP")
+    #ib.reqContractDetails(contract)
+    try:
+        ib.qualifyContracts(contract)
+    except :
+        time.sleep(5)
+        checkConnection()
+        ib.qualifyContracts(contract)
+    return contract
 
 def getJbReferencePrice():
 
@@ -81,6 +93,6 @@ def getJbReferencePrice():
 
 
 
-price = getJbReferencePrice()
+contract = Cac_CreateContract()
 
-print(price)
+print(contract)
