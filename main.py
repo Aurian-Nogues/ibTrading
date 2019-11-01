@@ -510,7 +510,7 @@ def liquidatePosition(contract, strategy):
 
 
     placeMarketOrder(contract,direction, quantity, strategy )
-    print(str(strategy) + ', ' + str(contract) + ', ''Liquidation order placed')
+    print(str(strategy) + ', ' + 'Liquidation order placed')
     
 
 def test():
@@ -919,10 +919,16 @@ def main():
 
 
 
+
+
     #loop to keep the scheduler running
     while True:
         schedule.run_pending()
         time.sleep(1)
+
+
+
+
 
 
 if __name__ == "__main__":
