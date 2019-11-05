@@ -912,8 +912,8 @@ def main():
     global downTrade
     global jbRefPrice
 
-    schedule.every().day.at("00:31").do(getJbReferencePrice)
-    schedule.every().day.at("00:32").do(startJb)
+    schedule.every().day.at("00:32").do(getJbReferencePrice)
+    schedule.every().day.at("00:34").do(startJb)
     schedule.every().day.at("07:00").do(JbClosing)
 
 
