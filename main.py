@@ -917,7 +917,7 @@ def main():
     schedule.every().day.at("07:00").do(JbClosing)
 
  #-------Send end of day report --------
-    schedule.every().day.at("17:00").do(sendDailyReport)
+    schedule.every().day.at("17:40").do(sendDailyReport)
 
 
 

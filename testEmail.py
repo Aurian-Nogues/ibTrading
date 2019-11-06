@@ -1,3 +1,3 @@
-from reportingEmail import sendDailyReport
+from reportingEmail import *
 
 sendDailyReport()

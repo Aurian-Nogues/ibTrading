@@ -9,8 +9,7 @@ import re
 def buildFutarbPnl(date):
 #Create trade recap and P&L
 
-    log = pd.read_csv("FutArb_trading_log.csv", sep='\s*,\s*', engine='python')
-
+    log = pd.read_csv("FutArb_trading_log.csv", sep=',')
     futarb_report = None
 
     for row in log.iterrows():
@@ -54,13 +53,17 @@ def buildFutarbPnl(date):
 def buildFutarbHistoricalPnl():
 #build historical PnL
 
-    log = pd.read_csv("FutArb_trading_log.csv", sep='\s*,\s*',engine='python')
+    log = pd.read_csv("FutArb_trading_log.csv", sep=',')
+
 
     historicalReport = None
     buildingDate = None
 
     for row in log.iterrows():
+
+
         logDate = row[1]['Time']
+        
         match = re.search(r'\d{4}-\d{2}-\d{2}', logDate)
         logDate = match.group()
 
@@ -72,6 +75,7 @@ def buildFutarbHistoricalPnl():
                 historicalReport = [[logDate, pnl]]
             else:
                 historicalReport.append([logDate, pnl])
+    
     futarbHistoricalDataframe = pd.DataFrame(historicalReport, columns = ['Date', 'P&L'])
     return futarbHistoricalDataframe
 
@@ -101,11 +105,6 @@ def futarbCreateReportContent():
     today = datetime.datetime.today()
     dateToday = today.strftime("%Y-%m-%d")
 
-    
-    #print('Since inception: ')
-    #print(table.to_string(index=False))
-    #print('')
-
     historicalPnL = buildFutarbHistoricalPnl()
     averageReturn, totalReturn, hitRatio = calculateMetrics (historicalPnL)
     
@@ -117,9 +116,10 @@ def futarbCreateReportContent():
 
 
     
-    #print('Daily P&L:')
+    #========== test ===========
     #date = '2019-10-16' # need to replace with today date when in production
     #dailyTrades, dailyPNL, dailyTrigger = buildFutarbPnl(date)
+    #========== test ===========
     dailyTrades, dailyPNL, dailyTrigger = buildFutarbPnl(dateToday)
     
     #format all variables for email
@@ -231,3 +231,4 @@ def sendDailyReport():
     email, password, receiver_emails = emailConfiguration()
     futarbContents = futarbCreateReportContent()
     sendEmail(email, password, receiver_emails, futarbContents)
+    print("Sent reporting email")
