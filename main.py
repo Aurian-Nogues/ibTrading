@@ -14,8 +14,8 @@ ib = IB()
 #/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 def Cac_CreateContract():
     checkConnection()
-    #create contract for cac future expiring 20 sept 2019
-    contract = Future(localSymbol="MFCX9", exchange = "MONEP")
+    #create contract for cac future expiring 20 dec 2019
+    contract = Future(localSymbol="MFCZ9", exchange = "MONEP")
     #ib.reqContractDetails(contract)
     try:
         ib.qualifyContracts(contract)
@@ -172,15 +172,26 @@ def writeLog(tradeLog, contract, direction, strategy):
                         print('Execution quantity not found in message')
                         execQtyLog = 'Qty not found in trade log'
 
-                #define log entries    
-                strategy = strategy
-                timeLog = entry.time
-                contractLog = contract.symbol
-                conIdLog = contract.conId
-                expiryLog = contract.lastTradeDateOrContractMonth
-                directionLog = direction
-                execPriceLog = entry.message.split('@', 1)[1]
-                execQtyLog = execQtyLog
+                #define log entries
+                try:    
+                    strategy = strategy
+                    timeLog = entry.time
+                    contractLog = contract.symbol
+                    conIdLog = contract.conId
+                    expiryLog = contract.lastTradeDateOrContractMonth
+                    directionLog = direction
+                    execPriceLog = entry.message.split('@', 1)[1]
+                    execQtyLog = execQtyLog
+                except IndexError:
+                    strategy = strategy
+                    timeLog = entry.time
+                    contractLog = contract.symbol
+                    conIdLog = contract.conId
+                    expiryLog = contract.lastTradeDateOrContractMonth
+                    directionLog = direction
+                    execPriceLog = "error in execution, maybe check future roll"
+                    execQtyLog = "error in execution, maybe check future roll"
+
 
                 #build entry and append it to trade logs
                 logEntry = [
